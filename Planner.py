@@ -120,9 +120,8 @@ class PlanSpacePlanner:
 		results = set()
 		s_need, precondition = flaw.flaw
 
-		#antecedent is of the form (antecedent_action_with_missing_eff_link, eff_link)
 		antecedents = GL.pre_dict[precondition.replaced_ID]
-		#print('flaw precondition.replaced_ID: {}'.format(precondition.replaced_ID))
+
 		for ante in antecedents:
 			if ante.action.name == 'dummy_init':
 				continue
@@ -138,12 +137,10 @@ class PlanSpacePlanner:
 			new_plan = plan.deepcopy()
 
 			#step 4 - set sink before replace internals
-			preserve_original_id = eff_link.sink.replaced_ID #original
-			#anteaction.assign(eff_link.sink, new_plan.getElementById(precondition.ID)) #new
-			eff_link.sink.replaced_ID = preserve_original_id #original
+			preserve_original_id = eff_link.sink.replaced_ID
+			eff_link.sink.replaced_ID = preserve_original_id
 			eff_link.sink = new_plan.getElementById(precondition.ID)
 			new_plan.edges.add(eff_link)
-			# check: eff_link.sink should till be precondition of s_need
 
 			#step 5 - add new stuff to new plan
 			new_plan.elements.update(anteaction.elements)
@@ -151,10 +148,7 @@ class PlanSpacePlanner:
 
 			#step 6 - update orderings and causal links, add flaws
 			self.addStep(new_plan, anteaction.root, new_plan.getElementById(s_need.ID), eff_link.sink, GL, new=True)
-			try:
-				new_plan.flaws.addCndtsAndRisks(GL, anteaction.root)
-			except:
-				print('ok')
+			new_plan.flaws.addCndtsAndRisks(GL, anteaction.root)
 
 			#step 7 - add new_plan to open list
 			results.add(new_plan)
@@ -198,7 +192,6 @@ class PlanSpacePlanner:
 	def RetargetPrecondition(self, GL, plan, S_Old, precondition):
 		effect_token = GL.getConsistentEffect(S_Old, precondition)
 		pre_link = plan.RemoveSubgraph(precondition)
-		#plan.assign(pre_link.sink, effect_token) #new
 		plan.edges.remove(pre_link)
 		pre_link.sink = effect_token
 		plan.edges.add(pre_link)
@@ -277,8 +270,6 @@ class PlanSpacePlanner:
 		elif flaw.name == 'dcf':
 			print(GL[flaw.flaw].name)
 			story = other.deepcopy()
-			#if 116 in {s.stepnumber for s in plan.D.Steps}:
-			#	print('stop here for tests')
 			results = story.Unify(GL[flaw.flaw].ground_subplan.deepcopy(), self.story_GL)
 			print(len(results))
 			GL = self.story_GL
@@ -300,52 +291,38 @@ class PlanSpacePlanner:
 	def POCL(self, num_plans = 5):
 		Completed = []
 		visited = 0
-		#Visited = []
 
 		while len(self.Open) > 0:
 
 			#Select child
 			plan = self.Open.pop()
 
-			visited+=1
+			visited += 1
 
 			if not plan.isInternallyConsistent():
-				#print('branch terminated')
 				continue
-			#print(plan)
-			# for step in topoSort(plan.D):
-			# 	print(Action.subgraph(plan.D, step))
-			#for step in topoSort(plan.S):
-			#	print(Action.subgraph(plan.S, step))
 
 			if plan.num_flaws() == 0:
-				print('story + disc solution found at {} nodes expanded and {} nodes visited'.format(visited,
-																								len(self.Open)+visited))
+				print('bipartite solution found at {} nodes expanded and {} nodes visited'.format(visited,
+																								  len(self.Open)+visited))
 				Completed.append(plan)
 				if len(Completed) == num_plans:
 					return Completed
 				continue
-			elif len(plan.S.flaws) == 0:
-				pass
-				#print('story solution found at {} nodes expanded and {} nodes visited'.format(visited,
-			# len(self.Open)+visited))
+			elif len(plan.S.flaws) == 0 and not plan.S.solved:
+				plan.S.solved = True
+				print('story solution found at {} nodes expanded and {} nodes visited'.format(visited,len(self.Open)+visited))
 			elif len(plan.D.flaws) == 0 and not plan.D.solved:
 				plan.D.solved = True
 				print('disc solution found at {} nodes expanded and {} nodes visited'.format(visited, len(self.Open)+visited))
-
 				for step in topoSort(plan.D):
 					print(Action.subgraph(plan.D, step))
 				print('\n')
 
-			#for step in plan.D.Steps:
-			#	if step.name != 'dummy_init' and step.name != 'dummy_goal':
-			#		print(step.name)
-
-			#print(plan.S)
-			#print(plan.S.flaws)
 
 			#Select Flaw
 			k, flaw = plan.next_flaw()
+			#k = 0:story, 1:disc
 			if k == 1:
 				print('{} selected : {}\n'.format(flaw.name, flaw))
 
@@ -385,7 +362,7 @@ class TestPlanner(unittest.TestCase):
 	def testDecomp(self):
 		from GlobalContainer import GC
 
-		story_domain = 'domains/ark-domain.pddl''
+		story_domain = 'domains/ark-domain.pddl'
 		story_problem = 'domains/ark-problem.pddl'
 
 		print('Reading {} and {}'.format(story_domain, story_problem))
