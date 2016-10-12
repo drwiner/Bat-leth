@@ -16,6 +16,7 @@
                (bel-precedes ?source - step ?sink - step)
                (bel-occured-when ?step - step ?literal - literal)
                (occurs ?step - step)
+               (truth ?lit - literal ?bool - name-str)
                (effect ?step - step ?lit - literal)
                (precond ?step - step ?lit - literal)
                (consents ?step - step ?actor - actor)

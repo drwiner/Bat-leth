@@ -5,10 +5,10 @@ from ElementGraph import *
 
 class OrderingGraph(Graph):
 	
-	def __init__(self, ID, typ = None, name = None, Elements = None, Edges = None):
-		if typ == None:
+	def __init__(self, ID=None, typ=None, name=None, Elements=None, Edges=None):
+		if typ is None:
 			typ = 'ordering graph'
-		super(OrderingGraph,self).__init__(ID,typ,name,Elements,Edges,Restrictions=None)
+		super(OrderingGraph,self).__init__(ID, typ, name, Elements, Edges)
 
 	def __len__(self):
 		return len(self.edges)
@@ -91,8 +91,8 @@ class OrderingGraph(Graph):
 		
 		
 class CausalLinkGraph(OrderingGraph):
-	def __init__(self, ID, typ = None, name = None, Elements = None , Edges = None):
-		if typ == None:
+	def __init__(self, ID=None, typ=None, name=None, Elements=None, Edges=None):
+		if typ is None:
 			typ = 'causal link graph'
 		super(CausalLinkGraph,self).__init__(ID,typ,name,Elements,Edges)
 		self.nonThreats = defaultdict(set)

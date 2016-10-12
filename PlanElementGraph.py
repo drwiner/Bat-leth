@@ -6,23 +6,21 @@ import random
 import itertools
 from clockdeco import clock
 
-class DiscArg(ElementGraph):
-	def __init__(self, ID, type_graph, name=None, Elements=None, root_element=None, Edges=None):
-		super(DiscArg, self).__init__(ID, type_graph, name, Elements, root_element, Edges)
-		self.typ = root_element.typ
-
 
 class Action(ElementGraph):
 	#stepnumber = 2
-	def __init__(self, ID, type_graph, name=None, Elements=None, root_element=None, Edges=None):
-		
-		if Edges == None:
+	def __init__(self, ID=None, type_graph=None, name=None, Elements=None, root_element=None, Edges=None):
+
+		if type_graph is None:
+			type_graph = 'Action'
+
+		if Edges is None:
 			Edges = set()
 
 		if root_element is None:
-			root_element = Operator(uid(200),typ='Action')
+			root_element = Operator()
 			
-		if Elements == None:
+		if Elements is None:
 			Elements = {root_element}
 
 		self.nonequals = set()
@@ -97,10 +95,7 @@ class Action(ElementGraph):
 			new_self.replaceInternals()
 		return new_self
 
-				#elm.ID = elm.replaced_ID
-				#elm.ID = uid(self.root.stepnumber)
 
-		
 	# '''for debugging'''
 	# def getConditions(self):
 		# pres = {edge for edge in self.edges if edge.label == 'precond-of'}
@@ -135,14 +130,13 @@ class Action(ElementGraph):
 		
 class Condition(ElementGraph):
 	""" A Literal used in causal link"""
-	def __init__(self,ID,type_graph,name=None,Elements=None, root_element = None, Edges = None, Restrictions = None):
+	def __init__(self, ID=None, type_graph=None, name=None, Elements=None, root_element=None, Edges=None,
+				 Restrictions=None):
+		if type_graph is None:
+			type_graph = 'Condition'
 		
-		super(Condition,self).__init__(ID,type_graph,name,Elements,root_element,Edges,Restrictions)
-		self.labels = ['first-arg','sec-arg','third-arg','fourth-arg']
+		super(Condition,self).__init__(ID, type_graph, name, Elements, root_element, Edges, Restrictions)
 
-	# @property
-	# def truth(self):
-	# 	return self.root.truth
 
 	def isConsistent(self, other):
 		if isinstance(other, ElementGraph):
@@ -162,22 +156,20 @@ class Condition(ElementGraph):
 
 		
 class PlanElementGraph(ElementGraph):
-
-	GL = None
-
-	def __init__(self, ID, type_graph=None, name=None, Elements=None, plan_elm=None, Edges=None, Restrictions=None):
+	def __init__(self, ID=None, type_graph=None, name=None, Elements=None, plan_elm=None, Edges=None,
+				 Restrictions=None):
 				
-		if type_graph == None:
+		if type_graph is None:
 			type_graph = 'PlanElementGraph'
-		if Elements == None:
+		if Elements is None:
 			Elements = set()
-		if Edges == None:
+		if Edges is None:
 			Edges=  set()
-		if Restrictions == None:
+		if Restrictions is None:
 			Restrictions = set()
 		
-		self.OrderingGraph = OrderingGraph(ID=uid(5))
-		self.CausalLinkGraph = CausalLinkGraph(ID=uid(6))
+		self.OrderingGraph = OrderingGraph()
+		self.CausalLinkGraph = CausalLinkGraph()
 
 		self.flaws = FlawLib()
 		self.solved = False

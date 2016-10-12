@@ -26,83 +26,34 @@ def parse(domain_file, problem_file):
 
 	return problem
 	
-def makeGoal(formula, current_id):
+def makeGoal(formula):
 	if formula.key == 'not':
 		formula = next(iter(formula.children))
 		num_children = len(formula.children)
-		lit = Literal(ID=uid(current_id), typ='Condition', name=formula.key, num_args=num_children, truth=False)
+		lit = Literal(name=formula.key, num_args=num_children, truth=False)
 	else:
 		num_children = len(formula.children)
-		lit = Literal(ID=uid(current_id), typ='Condition', name=formula.key, num_args=num_children, truth=True)
+		lit = Literal(name=formula.key, num_args=num_children, truth=True)
 	return lit
 	
-def makeMotive(formula, current_id, parent, relationship, elements, edges, bit = None):
-	if bit ==None:
-		bit = True
-	character = next(iter(formula.children))
-	CE = next(element for element in elements if element.name == character.key.name)
-	formula = next(iter(formula.children))
-	""" make goal"""
-	lit = makeGoal(formula, current_id)
-	current_id += 1
-	m = Motivation(ID = uid(current_id), truth = bit, intender = character, goal=lit)
-	elements.update(m,lit)
-	edges.update(Edge(m,lit,'goal-of'),Edge(m,CE,'intender-of'),Edge(parent,m,relationship))
-	current_id+=1
-	return lit, formula
+
 	
-def makeLit(formula, current_id, parent, relationship, elements, edges, bit = None, noAdd = None):
+def makeLit(formula, parent, relationship, elements, edges, bit=None, noAdd=None):
 
 	if bit == None:
 		bit=  True
 	if noAdd == None:
 		noAdd = False
 	num_children = len(formula.children)
-	lit = Literal(ID=uid(current_id), typ='Condition',  name=formula.key, num_args=num_children, truth=bit)
-	#current_id += 1
+	lit = Literal(name=formula.key, num_args=num_children, truth=bit)
+
 	if not noAdd:
 		elements.add(lit)
-		edges.add(Edge(parent,lit,relationship))
+		edges.add(Edge(parent, lit, relationship))
 	return lit, formula
 
-def forallFormula(formula, parent, relationship, elements, edges):
-	'''
-		(forall ?c (not (at ?c ?l)))
-		first find out what ?c is . then get all args and create precondition for each
-	'''
-	global args
-	arg_elements = {v for v in args.values()}
-	scoped_var = formula.children[0]
-	typ = next(iter(elm.typ for elm in elements if elm.arg_name == scoped_var.key.name))
+def getNonEquals(formula, op_graph, elements, edges):
 
-	#scoped_args = story_objs from planning problem which share a typ with scoped_var
-	scoped_args = {arg for arg in arg_elements if arg.typ ==typ}
-	lit = formula.children[1]
-
-	negative = False
-	num_args = 0
-	if lit.key == 'not':
-		Lit, formula = makeLit(next(iter(lit.children)),7, parent=parent, relationship=relationship,
-							elements=elements, edges=edges, bit=False, noAdd=True)
-	else:
-		Lit, formula = makeLit(lit, 7, parent=parent,relationship= relationship, elements=elements, edges=edges,
-							bit=True, noAdd=True)
-
-	for arg in scoped_args:
-		L = copy.deepcopy(Lit)
-		L.ID = uid(26)
-		elements.add(L)
-		edges.add(Edge(parent, L, relationship))
-		for i, child in enumerate(formula.children):
-			if child.key.name == scoped_var.key.name:
-				elements.add(arg)
-				edges.add(Edge(L, arg, ARGLABELS[i]))  # figure out which arg
-			else:
-				non_scoped = next(element for element in elements if child.key.name == element.arg_name)
-				edges.add(Edge(L,non_scoped,ARGLABELS[i]))
-
-def getNonEquals(formula, elements, edges):
-	global op_graph
 	#ARGLABELS
 	(c1, c2) = formula.children
 	arg1 = next(element for element in elements if c1.key.name == element.arg_name)
@@ -113,89 +64,74 @@ def getNonEquals(formula, elements, edges):
 	i2 = ARGLABELS.index(edge2.label)
 	op_graph.nonequals.add((i1,i2))
 
-def getSubFormulaGraph(formula, current_id = None, parent = None, relationship = None, elements = None, edges = None):
-	if elements ==None:
+def getSubFormulaGraph(formula, op_graph, parent=None, relationship=None, elements=None, edges=None):
+	if elements is None:
 		elements = set()
-	if edges == None:
+	if edges is None:
 		edges = set()
 	
 	'''make new literal representing subformula'''
 	if formula.key == 'not':
 		formula = next(iter(formula.children))
 		if formula.key == 'intends':
-			lit, formula = makeMotive(formula, current_id, parent, relationship, elements, edges, False)
-		elif formula.key == 'equals' or formula.key == '=' or formula.key == 'equal':
-			getNonEquals(formula, elements, edges)
-			return elements, edges
+			pass
+			raise NameError('no intends yet')
+		elif formula.key in {'equals', '=', 'equal'}:
+			getNonEquals(formula, op_graph, elements, edges)
+			return
 		else:
-			lit, formula = makeLit(formula, current_id, parent, relationship, elements, edges, False)
+			lit, formula = makeLit(formula, parent, relationship, elements, edges, False)
 	elif formula.key == 'intends':
-		lit, formula = makeMotive(formula, current_id, parent, relationship, elements, edges, True)
+		raise NameError('no intends yet')
 	elif formula.key == 'for-all' or formula.key == 'forall':
-		#formula = next(iter(formula.children))
-		forallFormula(formula, parent, relationship, elements, edges)
-		return elements, edges
+		raise NameError('no for-all yet')
 	elif formula.type >0:
-		pass
+		raise ValueError('not sure why formula.type > 0')
 	else:
-		lit, formula = makeLit(formula, current_id, parent, relationship, elements, edges, True)
+		lit, formula = makeLit(formula, parent, relationship, elements, edges, True)
 	
 	'''for each variable, find existing argument in action parameters and add Edge'''
 	for i, child in enumerate(formula.children):
-		#children are list
-		#print(child.key.name)
 		arg = next(element for element in elements if child.key.name == element.arg_name)
 		
 		if relationship == 'actor-of':
 			edges.add(Edge(parent, arg, 'actor-of'))
-
-		#elif lit.name == '=' or lit.name == 'equals' or lit.name == 'equal':
-			# TODO: test if ever receiving 'equals'
-			#edges.add(Edge(lit, arg, 'arg-of'))
 		else:
 			edges.add(Edge(lit, arg, ARGLABELS[i]))
 			
 	return elements, edges
-	
-""" Get a precondition, effect, or set of prerequisites from pddl operator to element graph"""
 
-def getFormulaGraph(formula, current_id = None, parent = None, relationship = None, elements = None, edges = None):
-	if current_id == None:
-		current_id = 1
-	if parent == None:
-		parent = Element(ID = uid(current_id), typ = None)
-		current_id += 1
-	if edges == None:
+def getFormulaGraph(formula, op_graph, parent=None, relationship=None, elements=None, edges=None):
+	if parent is None:
+		parent = Element()
+	if edges is None:
 		edges = set()
-	if elements == None:
-		elements = set() #why is this list?
-	
+	if elements is None:
+		elements = set()
 		
 	if formula.key == 'and':
 		for child in formula.children:
-			getSubFormulaGraph(child, current_id, parent, relationship, elements, edges)
+			getSubFormulaGraph(child, op_graph, parent, relationship, elements, edges)
 	else:
-		getSubFormulaGraph(formula, current_id, parent, relationship, elements, edges)
-		
-	return elements, edges
+		getSubFormulaGraph(formula, op_graph, parent, relationship, elements, edges)
 	
 def getSubFormulaNoParent(formula, objects):
-	lit = None
 	elements = set()
 	edges = set()
 	if formula.key == 'not':
 		formula = next(iter(formula.children))
 		if formula.key == 'intends':
-			pass
+			raise NameError('no intends yet')
+
 		else:
-			lit = Literal(ID=uid(12), typ='Condition', name=formula.key, num_args=len(formula.children), truth=False)
+			lit = Literal(name=formula.key, num_args=len(formula.children), truth=False)
 			elements.add(lit)
 	elif formula.key == 'intends':
-		pass
-	elif formula.type >0:
-		pass
+		raise NameError('no intends yet')
+	elif formula.type > 0:
+		raise ValueError('not sure why formula.type > 0')
 	else:
-		lit = Literal(ID=uid(13), typ='Condition', name=formula.key, num_args=len(formula.children), truth=True)
+		lit = Literal(name=formula.key, num_args=len(formula.children), truth=True)
 		elements.add(lit)
 	for i, child in enumerate(formula.children):
 		#children are list
@@ -234,6 +170,13 @@ def decorateElm(child, DG):
 	elif child.key == 'includes':
 		arg1, arg2 = child.children
 		DG.edges.add(Edge(whichElm(arg1.key.name,DG),whichElm(arg2.key.name,DG),'arg-of'))
+	elif child.key == 'truth':
+		lit, value = child.children
+		lit = whichElm(lit.key.name, DG)
+		if value.key in {'t', '1', 'true', 'yes', 'y'}:
+			lit.truth = True
+		else:
+			lit.truth = False
 	elif child.key == 'effect' or child.key == 'precond':
 		label = child.key + '-of'
 		arg1, arg2 = child.children
@@ -244,7 +187,7 @@ def decorateElm(child, DG):
 		DG.edges.add(Edge(whichElm(arg1.key.name,DG), child_elm, label))
 	elif child.key == 'linked':
 		arg1, arg2 = child.children
-		dep = Literal(typ='Condition', arg_name='link-condition'+str(uid(1))[19:23])
+		dep = Literal(arg_name='link-condition'+str(uid(1))[19:23])
 		Src = whichElm(arg1.key.name, DG)
 		Snk = whichElm(arg2.key.name, DG)
 		DG.CausalLinkGraph.addEdge(Src, Snk, dep)
@@ -258,10 +201,10 @@ def decorateElm(child, DG):
 		try:
 			dep = whichElm(by.key.name, DG)
 		except:
-			dep = litFromArg(by,DG)
+			dep = litFromArg(by, DG)
 		Src = whichElm(src.key.name, DG)
-		Snk =  whichElm(snk.key.name, DG)
-		DG.CausalLinkGraph.addEdge(Src,Snk, dep)
+		Snk = whichElm(snk.key.name, DG)
+		DG.CausalLinkGraph.addEdge(Src, Snk, dep)
 		DG.edges.add(Edge(Snk, dep, 'precond-of'))
 		DG.edges.add(Edge(Src, dep, 'effect-of'))
 	elif child.key == 'consents':
@@ -289,8 +232,7 @@ def litFromArg(arg,DG):
 		arg = arg.children[0]
 	# arg 2 is written out
 	lit_name = arg.key
-	lit_elm = Literal(ID=uid(256), typ='Condition',name=lit_name, arg_name=lit_name+str(uid(1))[19:23], num_args=len(
-		arg.children), truth=neg)
+	lit_elm = Literal(name=lit_name, arg_name=lit_name+str(uid(1))[19:23], num_args=len(arg.children), truth=neg)
 	for i, ch in enumerate(arg.children):
 		e_i = whichElm(ch.key.name, DG)
 		DG.edges.add(Edge(lit_elm, e_i, ARGLABELS[i]))
@@ -299,44 +241,27 @@ def litFromArg(arg,DG):
 def whichElm(name, dg):
 	return next(element for element in dg.elements if name == element.arg_name)
 
-
-def getDecomp(formula, decomp_graph):
-	if formula.key == 'not':
-		pass
-		print('not doing this yet')
-		R = Restriction()
-		decomp_graph.Restrictions.add(R)
-		return
-
-
-	for child in formula.children:
-		if len(child.children) > 0:
-			#elm = whichElm(child.key.name,decomp_graph)
-			decorateElm(child,decomp_graph)
-
 def getDecompGraph(formula, decomp_graph, params):
 
-	for i,param in enumerate(params):
-		createElementByType(i,param,decomp_graph)
+	for param in params:
+		createElementByType(param, decomp_graph)
 
 	if formula.key == 'and':
 		for child in formula.children:
 			decorateElm(child, decomp_graph)
-			#getDecomp(child, decomp_graph)
 	else:
 		decorateElm(formula, decomp_graph)
-		#getDecomp(formula, decomp_graph)
 		
 def rPrintFormulaElements(formula):
 		
 	#BASE CASE
 	if formula.type == 1 or formula.type == 2:
-		print(formula.key.name, end= " ")
+		print(formula.key.name, end=" ")
 		return
 	
 	#INDUCTION
 	if not formula.key == 'and':
-		print('{}'.format(formula.key), end= " ")
+		print('{}'.format(formula.key), end=" ")
 	
 	for child in formula.children:
 		rPrintFormulaElements(child)
@@ -344,16 +269,16 @@ def rPrintFormulaElements(formula):
 
 	print('\n')
 
-def createElementByType(i, parameter, decomp):
+def createElementByType(parameter, decomp):
 	if 'character' in parameter.types or 'actor' in parameter.types:
-		elm = Actor(ID=uid(i), typ='character', arg_name=parameter.name)
+		elm = Actor(arg_name=parameter.name)
 	elif 'arg' in parameter.types or 'item' in parameter.types or 'place' in parameter.types:
 		arg_type = next(iter(parameter.types))
-		elm = Argument(ID=uid(i), typ=arg_type, arg_name=parameter.name)
+		elm = Argument(typ=arg_type, arg_name=parameter.name)
 	elif 'step' in parameter.types:
-		elm = Operator(ID=uid(i), typ='Action', arg_name=parameter.name)
+		elm = Operator(arg_name=parameter.name)
 	elif 'literal' in parameter.types or 'lit' in parameter.types:
-		elm = Literal(ID=uid(i), typ='Condition', arg_name=parameter.name)
+		elm = Literal(arg_name=parameter.name)
 	else:
 		raise ValueError('parameter {} not story element'.format(parameter.name))
 
@@ -361,49 +286,40 @@ def createElementByType(i, parameter, decomp):
 	return
 
 
+def evalActionParams(params, op_graph):
+	for i, parameter in enumerate(params):
+		# parameters are list
+		if 'character' in parameter.types or 'actor' in parameter.types:
+			arg = Actor(arg_name=parameter.name)
+			op_graph.elements.add(arg)
+		else:
+			arg_type = next(iter(parameter.types))
+			arg = Argument(typ=arg_type, arg_name=parameter.name)
+			op_graph.elements.add(arg)
+		op_graph.edges.add(Edge(op_graph.root, arg, ARGLABELS[i]))
+
 
 """ Convert pddl file to set of operator graphs"""
 @clock
 def domainToOperatorGraphs(domain):
-	start_id = 15
 	opGraphs = set()
 	for action in domain.actions:
-		start_id += 1
-		op_id = uid(start_id)
-		#Element types correspond to their type of graph
-		op = Operator(ID = op_id, typ = 'Action', name = action.name, num_args = len(action.parameters))
-		
-		op_graph =			Action(	ID = uid(start_id),\
-							type_graph = 'Action', \
-							name = action.name,\
-							root_element = op)
-		global op_graph
-		start_id += 1
-		#args = {}
-		'''First, create elements for all action parameters (variables)'''
-		for i, parameter in enumerate(action.parameters):
-			#parameters are list
-			if 'character' in parameter.types or 'actor' in parameter.types:
-				arg = Actor(ID=uid(start_id), typ='character', arg_name=parameter.name)
-				op_graph.elements.add(arg)#, #arg_pos_dict={op_id : i}))
+		op = Operator(name=action.name, num_args=len(action.parameters))
+		op_graph = Action(name=action.name, root_element=op)
+		evalActionParams(action.parameters, op_graph)
 
-			# elif 'actor' in parameter.types:
-			# 	op_graph.elements.add(Actor(ID = uid(start_id), typ = 'actor', arg_name = parameter.name))#, arg_pos_dict={op_id : i}))
-			else:
-				arg_type = next(iter(parameter.types))
-				arg = Argument(ID = uid(start_id), 	typ=arg_type, arg_name=parameter.name)
-				op_graph.elements.add(arg)#, arg_pos_dict=	{op_id :  i}))
-			op_graph.edges.add(Edge(op_graph.root, arg, ARGLABELS[i]))
-			start_id += 1
-
-		if not action.precond is None:
-			getFormulaGraph(action.precond.formula, start_id, parent = op, relationship = 'precond-of',elements=op_graph.elements, edges=op_graph.edges)
-		getFormulaGraph(action.effect.formula, start_id, parent = op, relationship = 'effect-of', elements=op_graph.elements,edges=op_graph.edges)
-		if hasattr(action, 'decomp') and not action.decomp is None:
-			decomp_graph = PlanElementGraph(ID = uid(1), name=action.name, type_graph='decomp')
+		if action.precond is not None:
+			getFormulaGraph(action.precond.formula, op_graph, parent=op, relationship='precond-of',
+							elements=op_graph.elements, edges=op_graph.edges)
+		if action.effect is not None:
+			getFormulaGraph(action.effect.formula, op_graph, parent=op, relationship='effect-of',
+							elements=op_graph.elements,
+						edges=op_graph.edges)
+		if hasattr(action, 'decomp') and action.decomp is not None:
+			decomp_graph = PlanElementGraph(name=action.name, type_graph='decomp')
 			getDecompGraph(action.decomp.formula, decomp_graph, action.parameters)
 			op_graph.subgraphs.add(decomp_graph)
-		##getFormulaGraph(action.agents.formula, start_id, parent = op, relationship = 'actor-of', elements = op_graph.elements,edges= op_graph.edges)
+
 		opGraphs.add(op_graph)
 	return opGraphs
 	
@@ -416,41 +332,43 @@ def problemToGraphs(problem):
 		Values: arg dictionary, (elements, edges), (elements, edges)
 	"""
 
-	if len(problem.elements) > 0:
-		for elm in problem.elements:
-			pass
+	if problem.goalAction is not None:
+		action = problem.goalAction
+		gop = Operator(name=action.name, num_args=len(action.parameters))
+		GoalAction = Action(name=action.name, root_element=gop)
+		evalActionParams(action.parameters, GoalAction)
+		getFormulaGraph(action.precond.formula, GoalAction, parent=gop, relationship='precond-of',
+						elements=GoalAction.elements, edges=GoalAction.edges)
+		decomp_graph = PlanElementGraph(name=action.name, type_graph='decomp')
+		getDecompGraph(action.decomp.formula, decomp_graph, action.parameters)
+		GoalAction.subgraphs.add(decomp_graph)
+		goal_graph = GoalAction
+		init_op = Operator(name='dummy_init', stepnumber=0, num_args=0)
+		init_graph = Action(name='dummy_init', root_element=init_op)
+		Args = dict()
 
-	Args = {object.name: Argument(ID=uid(1),name=object.name, typ=object.typeName) for object in problem.objects if
+	else:
+		Args = {object.name: Argument(name=object.name, typ=object.typeName) for object in problem.objects if
 			not object.typeName.lower() in {'character', 'actor'}}
-	Args.update({object.name: Actor(ID = uid(1), name=object.name, typ='character') for object in problem.objects if
+		Args.update({object.name: Actor(name=object.name) for object in problem.objects if
 				 object.typeName.lower() in {'character', 'actor'}})
+		goal_elements, goal_edges = getGoalSet(problem.goal.formula, Args)
+		goal_op = Operator(name='dummy_goal', stepnumber=1, num_args=0)
+		goal_graph = Action(name='dummy_goal', root_element=goal_op)
+		goal_graph.elements.update(goal_elements)
+		goal_graph.edges.update(goal_edges)
+		goal_graph.edges.update({Edge(goal_op, goal_lit, 'precond-of')
+								 for goal_lit in goal_elements if type(goal_lit) is Literal})
 
+		init_op = Operator(name='dummy_init', stepnumber=0, num_args=0)
+		init_graph = Action(name='dummy_init', root_element=init_op)
+		for condition in problem.init.predicates:
+			lit = Literal(name=condition.name, num_args=len(condition.parameters), truth=True)
+			init_graph.elements.add(lit)
+			init_graph.edges.add(Edge(init_op, lit, 'effect-of'))
+			for i, p in enumerate(condition.parameters):
+				init_graph.edges.add(Edge(lit, Args[p], ARGLABELS[i]))
 
-	init_op = Operator(ID = uid(114), typ='Action', name='dummy_init', stepnumber=0, num_args=0)
-	init_graph =			Action(ID=uid(115),
-							type_graph='Action',
-							name='dummy_init',
-							root_element=init_op)
-	for condition in problem.init.predicates:
-		condition_id = uid(20)
-		lit = Literal(ID=condition_id, typ='Condition', name=condition.name, num_args=len(condition.parameters),
-					  truth = True)
-		init_graph.elements.add(lit)
-		init_graph.edges.add(Edge(init_op, lit, 'effect-of'))
-		for i,p in enumerate(condition.parameters):
-			init_graph.edges.add(Edge(lit, Args[p],ARGLABELS[i]))
-	
-	goal_elements, goal_edges = getGoalSet(problem.goal.formula, Args)
-	goal_op = Operator(ID = uid(114), typ = 'Action', name = 'dummy_goal', stepnumber= 1, num_args = 0)
-	goal_graph =			Action(	ID = uid(115),
-							type_graph = 'Action',
-							name = 'dummy_goal',
-							root_element = goal_op)
-	goal_graph.elements.update(goal_elements)
-	goal_graph.edges.update(goal_edges)
-	goal_graph.edges.update({Edge(goal_op, goal_lit, 'precond-of') for goal_lit in goal_elements if type(goal_lit) is
-							 Literal})
-	
 	return (Args, init_graph, goal_graph)
 
 
@@ -458,19 +376,14 @@ import itertools
 def addNegativeInitStates(predicates, initAction, objects):
 	init_tups = defaultdict(set)
 	effects = initAction.getNeighbors(initAction.root)
-	#[sorted([(edge.sink, ARGLABELS.index(edge.label)) for edge in initAction.getIncidentEdges(eff)],
-		 #  key=lambda x: x[1]) for eff in effects]
 	for eff in effects:
 		nontup = sorted([(edge.sink, ARGLABELS.index(edge.label)) for edge in initAction.getIncidentEdges(eff)],
 					key = lambda x: x[1])
 		init_tups[eff.name].add(tuple(nontup[i][0] for i in range(len(nontup))))
-	#init_tuples = [[arg for arg in initAction.getNeighbors(eff)) for eff in initAction.getNeighbors(
-		#initAction.root)))]
 
 	objs_by_type_dict = defaultdict(set)
 	for obj in objects:
 		objs_by_type_dict[obj.typ].add(obj)
-
 
 	for p in predicates:
 
@@ -478,7 +391,7 @@ def addNegativeInitStates(predicates, initAction, objects):
 		p.parameters[0].types is None]
 		param_tuples = {i for i in itertools.product(*param_object_pairs)}
 
-		pred = Literal(ID=uid(2), typ='Condition', name=p.name, arg_name='init_effect', num_args=len(
+		pred = Literal(name=p.name, arg_name='init_effect', num_args=len(
 			p.parameters), truth=False)
 
 		for pt in param_tuples:
@@ -486,10 +399,6 @@ def addNegativeInitStates(predicates, initAction, objects):
 				continue
 			pc = copy.deepcopy(pred)
 			pc.ID = uid(3)
-
-			#TODO compare each effect Condition to every existing effect condition - if equivalent, then cannot add
-			# elements/edges to initAction. Better yet, create tuples for each existing effect condition and subtract
-			#  from param_tuples before getting here
 
 			for i, arg in enumerate(pt):
 				initAction.edges.add(Edge(pc, arg, ARGLABELS[i]))
@@ -502,8 +411,8 @@ def domainAxiomsToGraphs(domain):
 	if len(domain.axioms) > 0:
 		from pddlToGraphs import ActionStmt
 	for ax in domain.axioms:
-		domain.actions.append(ActionStmt(name = ax.name, parameters = ax.vars_, precond = ax.context,
-										 effect = ax.implies))
+		domain.actions.append(ActionStmt(name=ax.name, parameters=ax.vars_, precond=ax.context,
+										 effect=ax.implies))
 
 
 def parseDomAndProb(domain_file, problem_file):
@@ -516,7 +425,6 @@ def parseDomAndProb(domain_file, problem_file):
 	parser = Parser(domain_file, problem_file)
 	domain, dom = parser.parse_domain_drw()
 	problem, v = parser.parse_problem_drw(dom)
-	global args
 	args, init, goal = problemToGraphs(problem)
 	objects = set(args.values())
 
@@ -528,7 +436,6 @@ def parseDomAndProb(domain_file, problem_file):
 	for op in Operators:
 		for eff in op.effects:
 			FlawLib.non_static_preds.add((eff.name,eff.truth))
-				#update(op.effects)
 
 	from GlobalContainer import GC
 	GC.object_types.update(obTypesDict(domain.types))
@@ -548,7 +455,7 @@ def obTypesDict(object_types):
 
 def rFollowHierarchy(object_types, child_name, accumulated = set()):
 	for ob in object_types:
-		if not ob.name in accumulated:
+		if ob.name not in accumulated:
 			if ob.name == child_name:
 				accumulated.add(ob.parent)
 				rFollowHierarchy(object_types, ob.parent, accumulated)
@@ -581,37 +488,4 @@ if __name__ ==  '__main__':
 	strucDict['init'].print_graph_names()
 	print('\ngoal\n')
 	strucDict['goal'].print_graph_names()
-
-	
-#domain_file = 'domain.pddl'
-#problem = parse('domain.pddl','task02.pddl')
-#domain_file = 'ark-domain_syntactic_sugar.pddl'
-	#domain_file = 'domains/mini-indy-domain.pddl'
-	#problem_file = 'domains/mini-indy-problem.pddl'
-#domain_file = 'domain_elevators.pddl'	
-#domain_file = 'ark-domain.pddl'
-
 	print('\n')	
-# domain = parseDomain(domain_file)
-# print(type(domain))
-# print(domain.name)
-# print('\ndomain action effect types:\n')
-
-
-
-
-#parser = Parser(domain_file, problem_file)
-#domain = parser.parse_domain()
-#problem = parser.parse_problem(domain)
-
-
-
-#opGraphs = domainToOperatorGraphs(domain_file)
-#print(len(opGraphs))
-#for opgraph in opGraphs:
-#	opgraph.print_graph_names()
-#	print('\n')
-
-#domain_file = '
-#problem_file = 'domains/mini-indy-problem.pddl'
-#problem = parse(domain_file, problem_file)

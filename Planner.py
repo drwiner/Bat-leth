@@ -323,8 +323,8 @@ class PlanSpacePlanner:
 			#Select Flaw
 			k, flaw = plan.next_flaw()
 			#k = 0:story, 1:disc
-			if k == 1:
-				print('{} selected : {}\n'.format(flaw.name, flaw))
+			#if k == 1:
+			#	print('{} selected : {}\n'.format(flaw.name, flaw))
 
 			#Add children to Open List
 			children = self.generateChildren(plan, k, flaw)

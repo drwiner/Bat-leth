@@ -95,7 +95,7 @@ class Effect:
 
 
 class Action:
-    def __init__(self, name, signature, precondition, effect, decomp = None):
+    def __init__(self, name, signature, precondition, effect, decomp=None):
         """
         name: The name identifying the action
         signature: A list of tuples (name, [types]) to represent a list of

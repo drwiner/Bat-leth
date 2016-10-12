@@ -91,7 +91,8 @@ class GLib:
 
 		if storyGL is not None:
 			self._gsteps = groundDiscList(operators, storyGL)
-			self.Goal_Actions = self.groundDiscGoal(goal_action)
+			self.Goal_Actions = groundDiscList([goal_action],storyGL)
+				#self.groundDiscGoal(goal_action)
 			self._gsteps.extend(self.Goal_Actions)
 			init_action.root.stepnumber = len(self._gsteps)
 			init_action.edges = set()
@@ -189,7 +190,12 @@ class GLib:
 		if len(discs) == 0:
 			raise ValueError('no args in goal_actions?')
 
-		story_elms = {elm for elm in (dgl.elements for dgl in self) if isStoryElement(elm)}
+		story_elms = set()
+		for dgl in self:
+			for element in dgl.elements:
+				if isStoryElement(element):
+					story_elms.add(element)
+
 		Disc_Worlds = itertools.product(*[DiscToElm(i, elm, story_elms) for i, elm in enumerate(discs)])
 
 		stepnum = len(self)
@@ -202,7 +208,7 @@ class GLib:
 				disc_arg = discs[i]
 				GA.assign(disc_arg, cndt_elm)
 			GA.root.stepnumber = stepnum
-			stepnum+=1
+			stepnum += 1
 			GA.replaceInternals()
 			GA._replaceInternals()
 			goals.append(GA)
@@ -294,13 +300,13 @@ def findCandidates(element, i, story_elms):
 
 def arg_to_elm(i, arg):
 	if arg.typ == 'character' or arg.typ == 'actor':
-		elm = Actor(ID=uid(i), name=arg.name, typ='character', arg_name=arg.arg_name)
+		elm = Actor(name=arg.name, arg_name=arg.arg_name)
 	elif arg.typ == 'arg' or arg.typ == 'item' or arg.typ == 'place':
-		elm = Argument(ID=uid(i), name=arg.name, typ=arg.typ, arg_name=arg.arg_name)
+		elm = Argument(name=arg.name, typ=arg.typ, arg_name=arg.arg_name)
 	elif arg.typ == 'step':
-		elm = Operator(ID=uid(i), name=arg.name, typ='Action', arg_name=arg.arg_name)
+		elm = Operator(name=arg.name, arg_name=arg.arg_name)
 	elif arg.typ == 'literal' or arg.typ == 'lit':
-		elm = Literal(ID=uid(i), name=arg.name, typ='Condition', arg_name=arg.arg_name)
+		elm = Literal(name=arg.name, arg_name=arg.arg_name)
 	else:
 		raise ValueError('whose typ is this anyway? {}'.format(arg.typ))
 	return elm

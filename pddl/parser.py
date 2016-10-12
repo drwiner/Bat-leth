@@ -227,7 +227,7 @@ class Formula(Visitable):
 class ActionStmt(Visitable):
 	"""This class represents the AST node for a pddl action."""
 
-	def __init__(self, name, parameters, precond, effect, decomp = None, agents = None):
+	def __init__(self, name, parameters, precond, effect, decomp=None, agents=None):
 		""" Construct a new Action.
 
 		Keyword arguments:
@@ -313,7 +313,7 @@ class DomainDef(Visitable):
 class ProblemDef(Visitable):
 	"""This class represents the AST node for a pddl domain."""
 
-	def __init__(self, name, domainName, objects=None, elements=None, init=None, goal=None):
+	def __init__(self, name, domainName, objects=None, goalAction=None, init=None, goal=None):
 		""" Construct a new Problem AST node.
 
 			Keyword arguments:
@@ -327,10 +327,7 @@ class ProblemDef(Visitable):
 		self.name = name
 		self.domainName = domainName
 		self.objects = objects
-		self.elements = elements
-		if elements is None:
-			self.elements = []
-
+		self.goalAction = goalAction
 		self.init = init
 		self.goal = goal
 
@@ -713,6 +710,16 @@ def parse_axiom_stmt(iter):
 	implies = parse_implies(iter)
 	return AxiomStmt(name, params, context, implies)
 
+def parse_goal_action_stmt(iter):
+	if not iter.try_match(':goal-action'):
+		raise ValueError('Error: action must start with ":goal-action" keyword!')
+	name = parse_name(iter, 'goal-action')
+	param = parse_parameters(iter)
+	pre = parse_precondition_stmt(iter)
+	eff = parse_effect_stmt(iter)
+	decomp = parse_decomp_stmt(iter)
+	return ActionStmt(name, param, pre, eff, decomp)
+
 def parse_action_stmt(iter):
 	"""
 	Parse an action definition which consists of a name, parameters a
@@ -841,18 +848,16 @@ def parse_problem_def(iter):
 	# parse all object definitions
 	objects = dict()
 	if iter.peek_tag() == ':objects':
-		objects = parse_objects_stmt(next(iter))
-		problem.objects = objects
-
-	while iter.peek_tag() == ':element':
-		elm = parse_element_stmt(next(iter))
-		problem.elements.append(elm)
+		problem.objects = parse_objects_stmt(next(iter))
 
 	init = parse_init_stmt(next(iter))
 	problem.init = init
 
-	goal = parse_goal_stmt(next(iter))
-	problem.goal = goal
+	if iter.peek_tag() == ':goal':
+		problem.goal = parse_goal_stmt(next(iter))
+	elif iter.peek_tag() == ':goal-action':
+		problem.goalAction = parse_goal_action_stmt(next(iter))
+
 	# assert end is reached
 	iter.match_end()
 	# create new ProblemDef instance

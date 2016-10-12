@@ -56,12 +56,14 @@ class Edge:
 
 class Graph(Element):
 	"""A graph is an element with elements, edges, and restrictions"""
-	def __init__(self, ID, typ, name=None, Elements=None, Edges=None, Restrictions=None):
+	def __init__(self, ID=None, typ=None, name=None, Elements=None, Edges=None, Restrictions=None):
+		if typ is None:
+			typ = 'Graph'
 		if Elements == None:
 			Elements = set()
-		if Edges == None:
+		if Edges is None:
 			Edges = set()
-		if Restrictions == None:
+		if Restrictions is None:
 			Restrictions = set()
 		
 		super(Graph, self).__init__(ID, typ, name)

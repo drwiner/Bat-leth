@@ -18,7 +18,11 @@ from GlobalContainer import GC
 class Element:
 
 	"""Element is a token or label with the following attributes"""
-	def __init__(self, ID, typ=None, name=None, arg_name=None):
+	def __init__(self, ID=None, typ=None, name=None, arg_name=None):
+		if ID is None:
+			from uuid import uuid1
+			ID = uuid1(1337)
+
 		self.ID = ID
 		self.typ = typ
 		self.name = name
@@ -103,7 +107,7 @@ class InternalElement(Element):
 	"""Internal Element is an Element with a possibly unimportant name, and a number of arguments
 	"""
 
-	def __init__(self, ID, typ, name = None, arg_name = None, num_args=None):
+	def __init__(self, ID=None, typ=None, name=None, arg_name=None, num_args=None):
 		super(InternalElement,self).__init__(ID,typ,name, arg_name)
 		if num_args == None:
 			num_args = 0
@@ -160,17 +164,18 @@ class InternalElement(Element):
 class Operator(InternalElement):
 	stepnumber = 0
 	""" An operator element is an internal element with an executed status and orphan status"""
-	def __init__(self, ID, typ, name=None, stepnumber=None, num_args=None, executed=None, arg_name=None):
-
-		if num_args == None:
+	def __init__(self, ID=None, typ=None, name=None, stepnumber=None, num_args=None, executed=None, arg_name=None):
+		if typ is None:
+			typ = 'Action'
+		if num_args is None:
 			num_args = 0
-		if stepnumber == None:
+		if stepnumber is None:
 			stepnumber = Operator.stepnumber
 			Operator.stepnumber+=1
 		else:
 			Operator.stepnumber = stepnumber + 1
 		
-		super(Operator,self).__init__(ID, typ, name, arg_name, num_args = num_args)
+		super(Operator,self).__init__(ID, typ, name, arg_name, num_args=num_args)
 		self.stepnumber = stepnumber
 		self.executed = executed
 		
@@ -205,12 +210,9 @@ class Operator(InternalElement):
 class Literal(InternalElement):
 	""" A Literal element is an internal element with a truth status
 	"""
-	def __init__(self, ID = None, typ = None, name = None, arg_name = None, num_args = None,truth = None):
+	def __init__(self, ID=None, typ=None, name=None, arg_name=None, num_args=None, truth=None):
 		if num_args is None:
 			num_args = 0
-		if ID is None:
-			from uuid import uuid1
-			ID = uuid1(1337)
 		if typ is None:
 			typ = 'Condition'
 
@@ -266,7 +268,9 @@ class Literal(InternalElement):
 		
 class Argument(Element):
 
-	def __init__(self, ID, typ, name=None, arg_name=None):
+	def __init__(self, ID=None, typ=None, name=None, arg_name=None):
+		if typ is None:
+			typ = 'Arg'
 		super(Argument,self).__init__(ID, typ, name, arg_name)
 	
 	def isEquivalent(self, other):
@@ -322,8 +326,10 @@ class Argument(Element):
 class Actor(Argument):
 	""" An actor is an argument """
 
-	def __init__(self, ID, typ, name=None, arg_name=None):
-		super(Actor,self).__init__(ID,typ,name,arg_name)
+	def __init__(self, ID=None, typ=None, name=None, arg_name=None):
+		if typ is None:
+			typ = 'character'
+		super(Actor,self).__init__(ID, typ, name, arg_name)
 		
 	def merge(self, other):
 		if super(Actor,self).merge(other) is None:
@@ -345,7 +351,7 @@ class Actor(Argument):
 
 class PlanElement(Element):
 
-	def __init__(self, uid, typ=None, name=None, arg_name=None):
+	def __init__(self, uid=None, typ=None, name=None, arg_name=None):
 		if typ is None:
 			typ = 'PlanElementGraph'
 			

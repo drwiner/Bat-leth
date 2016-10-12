@@ -102,7 +102,8 @@ class PDDLVisitor:
 			p.accept(self)
 		if not node.precond is None:
 			node.precond.accept(self)
-		node.effect.accept(self)
+		if not node.effect is None:
+			node.effect.accept(self)
 		node.decomp.accept(self)
 
 	def visit_formula(self, node):
@@ -349,8 +350,11 @@ class TraversePDDLDomain(PDDLVisitor):
 			precond = None
 
 		# Visit the effect statement.
-		node.effect.accept(self)
-		effect = self.get_in(node.effect)
+		if not node.effect is None:
+			node.effect.accept(self)
+			effect = self.get_in(node.effect)
+		else:
+			effect = None
 
 		#Visit the decomp statement
 		try:
@@ -668,8 +672,12 @@ class TraversePDDLProblem(PDDLVisitor):
 		init_list = self.get_in(node.init)
 
 		# Apply to the goal state definition.
-		node.goal.accept(self)
-		goal_list = self.get_in(node.goal)
+		try:
+			node.goal.accept(self)
+			goal_list = self.get_in(node.goal)
+		except:
+			node.goalAction.accept(self)
+			goal_list = []
 
 		# Create the problem data structure.
 		self._problemDef = pddl.Problem(node.name, self._domain, self._objects,
