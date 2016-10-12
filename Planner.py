@@ -381,52 +381,15 @@ import unittest
 
 from Ground import reload, GLib
 class TestPlanner(unittest.TestCase):
-	def testArk(self):
-		domain_file = 'domains/ark-domain.pddl'
-		problem_file = 'domains/ark-problem.pddl'
-		operators, objects, initAction, goalAction = parseDomAndProb(domain_file, problem_file)
-		obtypes = Argument.object_types
-
-
-		print('preprocessing...')
-		preprocess=False
-		if preprocess:
-			GL = GLib(op_graphs, objects, obtypes, initAction, goalAction)
-			print(len(GL))
-		else:
-			try:
-				print('try to reload:')
-				GL = reload('SGL')
-				print(len(GL))
-			except:
-				print('could not reload')
-				GL = GLib(op_graphs, objects,obtypes, initAction, goalAction)
-
-		planner = PlanSpacePlanner(operators, objects, GL)
-
-		n = 6
-		print('\nRunning Story Planner on ark-domain and problem to find {} solutions'.format(n))
-
-		results = planner.POCL(n)
-		assert len(results) == n
-		for result in results:
-			print('\n')
-			print('Story')
-			for step in topoSort(S):
-				print(Action.subgraph(S, step))
-			print('Discourse')
-			for step in topoSort(D):
-				print(Action.subgraph(D, step))
-		print('\n\n')
-		pass
-
-
 
 	def testDecomp(self):
 		from GlobalContainer import GC
 
-		print('Reading ark-domain and ark-problem')
-		story = parseDomAndProb('domains/ark-domain.pddl', 'domains/ark-problem.pddl')
+		story_domain = 'domains/ark-domain.pddl''
+		story_problem = 'domains/ark-problem.pddl'
+
+		print('Reading {} and {}'.format(story_domain, story_problem))
+		story = parseDomAndProb(story_domain, story_problem)
 		# (op_graphs, objects, GC.object_types, init, goal)
 
 		try:
@@ -438,8 +401,8 @@ class TestPlanner(unittest.TestCase):
 
 		disc_domain = 'domains/ark-discourse-tests.pddl'
 		disc_problem = 'domains/ark-discourse-tests-problem.pddl'
+
 		print('Reading {} and {}'.format(disc_domain, disc_problem))
-		#disc = parseDomAndProb('domains/ark-requirements-domain.pddl', 'domains/ark-requirements-problem.pddl')
 		disc = parseDomAndProb(disc_domain, disc_problem)
 		# (op_graphs, objects, GC.object_types, init, goal)
 
