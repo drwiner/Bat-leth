@@ -16,7 +16,7 @@
 
      ; // preconditions are goals
      :precondition (and (bel-effect ?has-ark ?excavate) (bel-occurs ?steal)
-                (bel-occurs ?excavate) (bel-effect ?has-ark ?excavate))
+                (bel-occurs ?excavate))
 
      ; // keep this here for now, should be empty though
      :effect ()

@@ -35,11 +35,10 @@ def groundStoryList(operators, objects, obtypes):
 			gsteps.append(gstep)
 	return gsteps
 
-def groundDiscList(operators, SGL):
+def groundDiscList(operators, SGL, stepnum=0):
 	from Plannify import Plannify
 	#For each ground subplan in Subplans, make a copy of DO s.t. each
 	gsteps = []
-	stepnum = 0
 	for op in operators:
 		Subplans = Plannify(next(iter(op.subgraphs)), SGL)
 		for sp in Subplans:
@@ -91,7 +90,7 @@ class GLib:
 
 		if storyGL is not None:
 			self._gsteps = groundDiscList(operators, storyGL)
-			self.Goal_Actions = groundDiscList([goal_action],storyGL)
+			self.Goal_Actions = groundDiscList([goal_action],storyGL, stepnum=len(self._gsteps))
 				#self.groundDiscGoal(goal_action)
 			self._gsteps.extend(self.Goal_Actions)
 			init_action.root.stepnumber = len(self._gsteps)
