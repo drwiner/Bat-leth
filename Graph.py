@@ -1,5 +1,6 @@
-from Element import *
+from Element import Element
 import copy
+
 from clockdeco import clock
 class Edge:
 	""" Edge labels are assumed to be function-free and ground, and there can be no edge otherwise"""

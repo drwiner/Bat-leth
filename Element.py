@@ -160,6 +160,9 @@ class Operator(InternalElement):
 		self.stepnumber = stepnumber
 		self.executed = executed
 
+	def __hash__(self):
+		return hash(self.ID)
+
 	def __eq__(self, other):
 		if self.name == other.name:
 			if self.stepnumber == other.stepnumber:
@@ -338,8 +341,8 @@ class Actor(Argument):
 
 class PlanElement(Element):
 
-	def __init__(self, uid=None, typ=None, name=None, arg_name=None):
+	def __init__(self, ID=None, typ=None, name=None, arg_name=None):
 		if typ is None:
 			typ = 'PlanElementGraph'
 			
-		super(PlanElement,self).__init__(uid, typ, name, arg_name)
+		super(PlanElement,self).__init__(ID, typ, name, arg_name)

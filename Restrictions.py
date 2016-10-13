@@ -11,7 +11,7 @@ element in 'E'.
 
 """
 
-from Graph import *
+from Graph import Graph, Edge
 #graph has import copy
 import collections
 

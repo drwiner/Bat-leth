@@ -1,10 +1,10 @@
 #from Flaws import *
-from pddlToGraphs import *
-import collections
+from pddlToGraphs import parseDomAndProb
+from PlanElementGraph import PlanElementGraph, Action, BiPlan
+from Flaws import Flaw
 from heapq import heappush, heappop
-import itertools
 from clockdeco import clock
-from Ground import GLib
+from Ground import reload, GLib
 
 
 """
@@ -355,8 +355,6 @@ def topoSort(graph):
 
 
 import unittest
-
-from Ground import reload, GLib
 class TestPlanner(unittest.TestCase):
 
 	def testDecomp(self):

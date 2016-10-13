@@ -1,16 +1,14 @@
 from pddl.parser import Parser
-#from Flaws import *
-
-from math import floor
-import collections
-from PlanElementGraph import *
+from collections import defaultdict
+from PlanElementGraph import Action, PlanElementGraph
+from Graph import Edge
+from Element import Argument, Operator, Literal, Element, Actor
 from clockdeco import clock
-
-
-#from Flaws import *
+import copy
+from uuid import uuid4
+from Flaws import FlawLib
 
 ARGLABELS = ['first-arg', 'sec-arg','third-arg', 'fourth-arg', 'fifth-arg']
-	
 
 def parseDomain(domain_file):
 	parser = Parser(domain_file)
@@ -35,7 +33,6 @@ def makeGoal(formula):
 		num_children = len(formula.children)
 		lit = Literal(name=formula.key, num_args=num_children, truth=True)
 	return lit
-	
 
 	
 def makeLit(formula, parent, relationship, elements, edges, bit=None, noAdd=None):
@@ -398,7 +395,7 @@ def addNegativeInitStates(predicates, initAction, objects):
 			if pt in init_tups[p.name]:
 				continue
 			pc = copy.deepcopy(pred)
-			pc.ID = uid(3)
+			pc.ID = uuid4()
 
 			for i, arg in enumerate(pt):
 				initAction.edges.add(Edge(pc, arg, ARGLABELS[i]))

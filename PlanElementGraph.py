@@ -1,10 +1,11 @@
-from OrderingGraph import *
-from Flaws import *
-from collections import deque
+from OrderingGraph import OrderingGraph, CausalLinkGraph
+from Flaws import Flaw, FlawLib
 from uuid import uuid1 as uid
-import random
 import itertools
 from clockdeco import clock
+from Element import Argument, Element, Operator, Literal
+from Graph import Edge
+from ElementGraph import ElementGraph
 
 
 class Action(ElementGraph):
@@ -21,6 +22,7 @@ class Action(ElementGraph):
 			root_element = Operator()
 			
 		if Elements is None:
+			print(root_element.ID)
 			Elements = {root_element}
 
 		self.nonequals = set()
@@ -164,7 +166,7 @@ class PlanElementGraph(ElementGraph):
 		if Elements is None:
 			Elements = set()
 		if Edges is None:
-			Edges=  set()
+			Edges = set()
 		if Restrictions is None:
 			Restrictions = set()
 		
@@ -177,7 +179,7 @@ class PlanElementGraph(ElementGraph):
 		self.final_dummy_step = None
 
 		if plan_elm is None:
-			plan_elm = PlanElement(uid=ID, typ=type_graph, name=name)
+			plan_elm = Element(ID=ID, typ=type_graph, name=name)
 									
 		super(PlanElementGraph,self).__init__(ID, type_graph, name, Elements, plan_elm, Edges, Restrictions)
 

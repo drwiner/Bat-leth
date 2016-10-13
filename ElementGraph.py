@@ -1,5 +1,7 @@
-from Restrictions import *
+from Restrictions import Restriction
 import uuid
+from Graph import Graph
+
 #if you subclass ElementGraph, please inform the authorities
 #This class is essentially an experimental middle man between Graph.py and Graphs in PlanElementGraph.py use for
 # prototyping.
