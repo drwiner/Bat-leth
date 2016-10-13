@@ -1,6 +1,8 @@
 (define (problem ark-discourse)
 
   (:domain ark-discourse-tests)
+
+  ; these objects do nothing, but will receive NoneType error if deleted; solve issue at pddlToGraphs
   (:objects steal - step
             excavate - step
             has-ark - literal
