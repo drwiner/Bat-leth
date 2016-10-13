@@ -145,6 +145,14 @@ class Condition(ElementGraph):
 	def __hash__(self):
 		return hash(arg for arg in self.Args) ^ hash(self.name)
 
+	def __eq__(self, other):
+		if isinstance(other, Literal) or isinstance(other, Argument):
+			return False
+		if self.name == other.name:
+			if self.Args == other.Args:
+				return True
+		return False
+
 	def isConsistent(self, other):
 		if isinstance(other, ElementGraph):
 			return self.isConsistentSubgraph(other)

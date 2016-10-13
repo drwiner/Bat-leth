@@ -341,7 +341,7 @@ class PlanSpacePlanner:
 				self.Open.insert(child)
 
 			#print('open list number: {}'.format(len(self.Open)))
-			print('\n')
+			pass
 
 
 def topoSort(graph):
