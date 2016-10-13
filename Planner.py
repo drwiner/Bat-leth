@@ -330,8 +330,7 @@ class PlanSpacePlanner:
 			#Select Flaw
 			k, flaw = plan.next_flaw()
 			#k = 0:story, 1:disc
-			#if k == 1:
-			#	print('{} selected : {}\n'.format(flaw.name, flaw))
+			print('{} selected : {}\n'.format(flaw.name, flaw))
 
 			#Add children to Open List
 			children = self.generateChildren(plan, k, flaw)
@@ -341,7 +340,7 @@ class PlanSpacePlanner:
 				self.Open.insert(child)
 
 			#print('open list number: {}'.format(len(self.Open)))
-			pass
+			#pass
 
 
 def topoSort(graph):

@@ -58,6 +58,7 @@
      :decomp (and (name ?excavate excavate)
                   (name ?steal steal)
                   (effect ?excavate ?state)
+                  (precond ?steal ?state)
                   (linked-by ?excavate ?steal ?state)))
 
 )

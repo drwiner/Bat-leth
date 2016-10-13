@@ -135,12 +135,8 @@ class GLib:
 
 	def loadAll(self):
 		for _step in self._gsteps:
-			#print('preprocessing step {}....'.format(_step))
 			pre_tokens = _step.preconditions
-			#if _step.stepnumber > 77:
-				#print('ok')
 			for _pre in pre_tokens:
-				#print('preprocessing precondition {} of step {}....'.format(_pre, _step))
 				self.loadAnteSteps(_step, _pre)
 
 	def loadAnteSteps(self, _step, _pre):

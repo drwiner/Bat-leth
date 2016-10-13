@@ -32,14 +32,14 @@ class Action(ElementGraph):
 		super(Action,self).__init__(ID, type_graph, name, Elements, root_element, Edges)
 
 	def __hash__(self):
-		return hash(arg for arg in self.Args) ^ hash(self.name)
+		return hash(arg for arg in self.Args) ^ hash(self.root.name)
 
 	def __eq__(self, other):
-		if isinstance(other, Argument):
+		if not isinstance(other, ElementGraph):
 			return False
-		if self.name == other.name:
-			if self.Args == other.Args:
-				return True
+		if self.root.name == other.root.name:
+				if self.Args == other.Args:
+					return True
 		return False
 
 	# @property
@@ -143,12 +143,12 @@ class Condition(ElementGraph):
 
 
 	def __hash__(self):
-		return hash(arg for arg in self.Args) ^ hash(self.name)
+		return hash(arg for arg in self.Args) ^ hash(self.root.name) ^ hash(self.root.truth)
 
 	def __eq__(self, other):
-		if isinstance(other, Literal) or isinstance(other, Argument):
+		if not isinstance(other, ElementGraph):
 			return False
-		if self.name == other.name:
+		if self.root.name == other.root.name and self.root.truth == other.root.truth:
 			if self.Args == other.Args:
 				return True
 		return False
@@ -339,8 +339,12 @@ class PlanElementGraph(ElementGraph):
 		if len(antecedents) == 0:
 			return 1000
 
+		for ant in antecedents:
+			if len(GL[ant].preconditions) == 0:
+				visited[ant] = 1
+				return 1
 
-		if not self.initial_dummy_step.stepnumber in antecedents:
+		if self.initial_dummy_step.stepnumber not in antecedents:
 			least = 1000
 			for ante in antecedents:
 
@@ -348,10 +352,11 @@ class PlanElementGraph(ElementGraph):
 					v = visited[ante]
 				else:
 					visited[ante] = 1000
-					v = self.relaxedStep(GL, GL[ante],visited)
+					v = self.relaxedStep(GL, GL[ante], visited)
 					visited[ante] = v
 				if v < least:
 					least = v
+
 			return least + 1
 		return 0
 
@@ -491,14 +496,14 @@ class BiPlan:
 		try:
 			if len(self.D.flaws.statics) > 0:
 				return 1, self.D.flaws.next()
-			#elif len(self.S.flaws.statics) > 0:
-			#	return 0, self.S.flaws.next()
-			#elif len(self.S.flaws.inits) > 0:
-			#	return 0, self.S.flaws.next()
+			elif len(self.S.flaws.statics) > 0:
+				return 0, self.S.flaws.next()
+			elif len(self.S.flaws.inits) > 0:
+				return 0, self.S.flaws.next()
 			elif len(self.D.flaws) > 0:
 				return 1, self.D.flaws.next()
-			#else:
-			#	return 0, self.S.flaws.next()
+			else:
+				return 0, self.S.flaws.next()
 		except:
 			raise ValueError("shouldn't get here if no more flaws")
 

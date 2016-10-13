@@ -6,6 +6,7 @@ from clockdeco import clock
 @clock
 def Plannify(RQ, GL):
 	#An ActionLib for steps in RQ - ActionLib is a container w/ all of its possible instances as ground steps
+	print('... Processing {}'.format(RQ.name))
 	print('...ActionLibs')
 	Libs = [ActionLib(i, RS, GL) for i, RS in enumerate([Action.subgraph(RQ, step) for step in RQ.Steps])]
 
