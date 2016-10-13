@@ -1,43 +1,35 @@
 from Restrictions import *
 import uuid
-
+#if you subclass ElementGraph, please inform the authorities
+#This class is essentially an experimental middle man between Graph.py and Graphs in PlanElementGraph.py use for
+# prototyping.
 class ElementGraph(Graph):
 	"""An element graph is a graph with a root element"""
 	arglabels = ['first-arg', 'sec-arg', 'third-arg', 'fourth-arg', 'fifth-arg']
 
-	def __init__(self, ID, type_graph, name=None, Elements=None, root_element=None, Edges=None, Restrictions=None):
-		if Elements == None:
-			Elements = set()
-		if Edges == None:
-			Edges = set()
-		if Restrictions == None:
-			Restrictions = set()
+	def __init__(self, ID=None, type_graph=None, name=None, Elements=None, root_element=None, Edges=None,
+				 Restrictions=None):
+		if type_graph is None:
+			type_graph = 'ElementGraph'
 
 		super(ElementGraph, self).__init__(ID, type_graph, name, Elements, Edges, Restrictions)
+
+		#Element graph has a specific root... This class is a useless middleman and is scheduled for demolition.
 		self.root = root_element
 
+	#Nice and simple.
+	def __eq__(self, other):
+		if self.root.name == other.root.name:
+			if self.Args == other.Args:
+				return True
+		return False
 
 	def deepcopy(self):
 		new_self = copy.deepcopy(self)
-		new_self.ID = uuid.uuid1(21)
+		new_self.ID = uuid.uuid4()
 		return new_self
 
-
-	# @property
-	# def typ(self):
-	# 	return self.root.typ
-	#
-	# @property
-	# def name(self):
-	# 	return self.root.name
-	#
-	# @property
-	# def num_args(self):
-	# 	return self.root.num_args
-
-
 	def isConsistent(self, other):
-
 		if isinstance(other) is not ElementGraph:
 			return self.root.isConsistent(other)
 
@@ -52,6 +44,8 @@ class ElementGraph(Graph):
 		if self.Args == other.Args:
 			return True
 		return False
+
+
 
 	@classmethod
 	def subgraph(cls, EG, elm):

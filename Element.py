@@ -13,6 +13,7 @@
 """ 
 
 import copy
+from uuid import uuid4
 from GlobalContainer import GC
 
 class Element:
@@ -20,15 +21,14 @@ class Element:
 	"""Element is a token or label with the following attributes"""
 	def __init__(self, ID=None, typ=None, name=None, arg_name=None):
 		if ID is None:
-			from uuid import uuid1
-			ID = uuid1(1337)
+			ID = uuid4
 
 		self.ID = ID
 		self.typ = typ
 		self.name = name
 		self.arg_name = arg_name
 		self.replaced_ID = -1
-		
+
 	def isConsistent(self, other):
 		""" Returns True if self and other have same name or unassigned"""
 		if not self.isConsistentType(other):
@@ -48,12 +48,7 @@ class Element:
 			if self.name != other.name:
 				return False
 		return True
-		
-	def isIdentical(self, other):
-		if self.ID == other.ID:
-			return True
-		return False
-		
+
 	def isEquivalent(self, other):
 		"""Another element is equivalent with self iff 
 				for each non-None parameter in self, 
@@ -62,30 +57,28 @@ class Element:
 				and if for each None parameter in self,
 					other's parameter cannot be None
 		"""
-		
+
 		if not self.typ is None:
 			if self.typ != other.typ:
 				return False
 		else:
 			if not other.typ is None:
 				return False
-				
+
 		return True
-		
-		
+
+
 	def __eq__(self, other):
 		if other is None:
 			return False
-		if self.ID == other.ID:
-			return True
-		return False
-		
+		return self.name == other.name
+
 	def __ne__(self, other):
 		return (not self.__eq__(other))
-		
+
 	def __hash__(self):
 		return hash(self.ID)
-			
+
 	def merge(self, other):
 		"""merge returns self with non-None properties of other,
 			and assumes elements are co-consistent"""
@@ -98,7 +91,7 @@ class Element:
 		if self.name is None and not other.name is None:
 			self.name = other.name
 		return self
-		
+
 	def __repr__(self):
 		id = str(self.ID)[19:23]
 		return '({}-{}-{})'.format(id, self.typ, self.name)
@@ -112,6 +105,9 @@ class InternalElement(Element):
 		if num_args == None:
 			num_args = 0
 		self.num_args = num_args
+
+	def __hash__(self):
+		return hash(self.ID)
 	
 	def isEquivalent(self, other):
 		if not super(InternalElement,self).isEquivalent(other):
@@ -178,6 +174,12 @@ class Operator(InternalElement):
 		super(Operator,self).__init__(ID, typ, name, arg_name, num_args=num_args)
 		self.stepnumber = stepnumber
 		self.executed = executed
+
+	def __eq__(self, other):
+		if self.name == other.name:
+			if self.stepnumber == other.stepnumber:
+				return True
+		return False
 		
 	def isConsistent(self,other):
 		if not super(Operator,self).isConsistent(other):
@@ -216,7 +218,7 @@ class Literal(InternalElement):
 		if typ is None:
 			typ = 'Condition'
 
-		super(Literal,self).__init__(ID,typ,name, arg_name, num_args)
+		super(Literal,self).__init__(ID, typ,name, arg_name, num_args)
 		self.truth = truth
 
 	def isConsistent(self, other):
@@ -231,7 +233,7 @@ class Literal(InternalElement):
 
 	def isOpposite(self, other):
 		opp = copy.deepcopy(self)
-		if self.truth == True:
+		if self.truth is True:
 			opp.truth = False
 		else:
 			opp.truth = True
@@ -261,8 +263,8 @@ class Literal(InternalElement):
 		return self
 		
 	def __repr__(self):
-		id = str(self.ID)[19:23]
-		return 'literal-{}-{}-{}'.format(id, self.truth, self.name)
+		shrt_id = str(self.ID)[19:23]
+		return 'literal-{}-{}-{}'.format(shrt_id, self.truth, self.name)
 
 		
 		
