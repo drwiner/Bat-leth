@@ -122,18 +122,18 @@ class Graph(Element):
 		return self
 
 	def assign(self, old_elm_in_edge, new_elm, remove_old=True):
-		if new_elm not in self.elements:
-			self.elements.add(new_elm)
 		if remove_old:
 			self.elements.remove(old_elm_in_edge)
-		edges = iter(self.edges)
+		if new_elm not in self.elements:
+			self.elements.add(new_elm)
+		edges = list(self.edges)
 		for edge in edges:
 			if edge.source == old_elm_in_edge:
+				self.edges.remove(edge)
 				self.edges.add(Edge(new_elm, edge.sink, edge.label))
-				self.edges.remove(edge)
 			if edge.sink == old_elm_in_edge:
-				self.edges.add(Edge(edge.source, new_elm, edge.label))
 				self.edges.remove(edge)
+				self.edges.add(Edge(edge.source, new_elm, edge.label))
 		for r in self.subgraphs:
 			if r.name == 'Restriction':
 				r.assign(old_elm_in_edge, new_elm)

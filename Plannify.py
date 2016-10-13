@@ -56,7 +56,7 @@ def partialUnify(PS, _map):
 			elm.merge(g_elm)
 			elm.replaced_ID = g_elm.replaced_ID
 
-	NSE = iter(NS.elements)
+	NSE = list(NS.elements)
 	for elm in NSE:
 		if elm in _map:
 			g_elm = _map[elm]
@@ -66,7 +66,7 @@ def partialUnify(PS, _map):
 				# this is an object/constant
 				ge = copy.deepcopy(g_elm)
 				ge.replaced_ID = ge.ID
-				NS.assign(elm,ge)
+				NS.assign(elm, ge)
 				#elm.replaced_ID = g_elm.ID
 				#elm.ID = g_elm.ID
 	NS.root.stepnumber = PS.root.stepnumber

@@ -32,6 +32,8 @@
                   (truth ?has-ark True)
                   (nth-lit-arg 0 ?has-ark ?indy)
                   (nth-lit-arg 1 ?has-ark ?ark)
+                  (effect ?excavate ?has-ark)
+                  (precond ?steal ?has-ark)
                   (linked-by ?excavate ?steal ?has-ark)
                   ))
  )

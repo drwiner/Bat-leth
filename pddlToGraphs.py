@@ -289,8 +289,13 @@ def evalActionParams(params, op_graph):
 		if 'character' in parameter.types or 'actor' in parameter.types:
 			arg = Actor(arg_name=parameter.name)
 			op_graph.elements.add(arg)
+		# elif 'literal' in parameter.types or 'lit' in parameter.types:
+		# 	lit = Literal(arg_name=parameter.name, typ='Condition')
+		# 	op_graph.elements.add(lit)
 		else:
 			arg_type = next(iter(parameter.types))
+			if arg_type in {'lit', 'literal'}:
+				arg_type = 'Condition'
 			arg = Argument(typ=arg_type, arg_name=parameter.name)
 			op_graph.elements.add(arg)
 		op_graph.edges.add(Edge(op_graph.root, arg, ARGLABELS[i]))

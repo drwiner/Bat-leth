@@ -1,6 +1,7 @@
 from Restrictions import Restriction
 import uuid
 from Graph import Graph
+import copy
 
 #if you subclass ElementGraph, please inform the authorities
 #This class is essentially an experimental middle man between Graph.py and Graphs in PlanElementGraph.py use for
@@ -21,6 +22,10 @@ class ElementGraph(Graph):
 
 	#Nice and simple.
 	def __eq__(self, other):
+		if type(other) is not ElementGraph:
+			if self.root.name == other.name:
+				pass
+			return False
 		if self.root.name == other.root.name:
 			if self.Args == other.Args:
 				return True

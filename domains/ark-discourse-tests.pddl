@@ -45,6 +45,7 @@
                   (name ?indy indiana)
                   (name ?ark ark)
                   (name ?state has)
+                  (truth ?state True)
                   (nth-lit-arg 0 ?state ?indy)
                   (nth-lit-arg 1 ?state ?ark)
                   (effect ?excavate ?state)))
@@ -56,6 +57,7 @@
      :effect (and (bel-linked ?excavate ?steal) (bel-occurs ?steal))
      :decomp (and (name ?excavate excavate)
                   (name ?steal steal)
+                  (effect ?excavate ?state)
                   (linked-by ?excavate ?steal ?state)))
 
 )

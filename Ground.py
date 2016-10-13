@@ -6,6 +6,7 @@ from PlanElementGraph import Condition, Action
 from clockdeco import clock
 from Element import Argument, Actor, Operator, Literal
 from ElementGraph import ElementGraph
+from Plannify import Plannify
 
 #GStep = namedtuple('GStep', 'action pre_dict pre_link')
 Antestep = namedtuple('Antestep', 'action eff_link')
@@ -33,9 +34,8 @@ def groundStoryList(operators, objects, obtypes):
 			gstep.replaceArgs(t)
 			gsteps.append(gstep)
 	return gsteps
-
 def groundDiscList(operators, SGL, stepnum=0):
-	from Plannify import Plannify
+
 	#For each ground subplan in Subplans, make a copy of DO s.t. each
 	gsteps = []
 	for op in operators:
@@ -43,19 +43,19 @@ def groundDiscList(operators, SGL, stepnum=0):
 		for sp in Subplans:
 			GDO = copy.deepcopy(op)
 			for elm in sp.elements:
-				ex_elms = iter(op.elements)
+				ex_elms = list(op.elements)
 				assignStoryToDisc(GDO, sp, elm, ex_elms)
 			GDO.ground_subplan = sp
 			GDO.root.stepnumber = stepnum
 			GDO._replaceInternals()
-			stepnum+=1
+			stepnum += 1
 			gsteps.append(GDO)
 
 	return gsteps
 
 def assignStoryToDisc(GDO, SP, elm, ex_elms):
 	for ex_elm in ex_elms:
-		if elm.arg_name is None:
+		if ex_elm.arg_name is None:
 			continue
 		if elm.arg_name != ex_elm.arg_name:
 			continue
@@ -63,7 +63,6 @@ def assignStoryToDisc(GDO, SP, elm, ex_elms):
 		EG = elm
 		if elm.typ in {'Action', 'Condition'}:
 			EG = eval(elm.typ).subgraph(SP, elm)
-
 		GDO.assign(ex_elm, EG)
 
 
@@ -138,6 +137,8 @@ class GLib:
 		for _step in self._gsteps:
 			#print('preprocessing step {}....'.format(_step))
 			pre_tokens = _step.preconditions
+			#if _step.stepnumber > 77:
+				#print('ok')
 			for _pre in pre_tokens:
 				#print('preprocessing precondition {} of step {}....'.format(_pre, _step))
 				self.loadAnteSteps(_step, _pre)

@@ -63,7 +63,7 @@ class Element:
 	def __eq__(self, other):
 		if other is None:
 			return False
-		return self.name == other.name
+		return self.ID == other.ID
 
 	def __ne__(self, other):
 		return not self.__eq__(other)
@@ -208,6 +208,9 @@ class Literal(InternalElement):
 
 		super(Literal,self).__init__(ID, typ,name, arg_name, num_args)
 		self.truth = truth
+
+	def __hash__(self):
+		return hash(self.name) ^ hash(self.truth)
 
 	def isConsistent(self, other):
 		if not super(Literal,self).isConsistent(other):

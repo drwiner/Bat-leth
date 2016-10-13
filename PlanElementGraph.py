@@ -25,7 +25,6 @@ class Action(ElementGraph):
 			root_element = Operator()
 			
 		if Elements is None:
-			print(root_element.ID)
 			Elements = {root_element}
 
 		self.nonequals = set()
@@ -158,8 +157,10 @@ class Condition(ElementGraph):
 		return len({arg for arg in self.Args if not arg.name is None})
 
 	def __repr__(self):
-		self.updateArgs()
-		args = str([' {}-{} '.format(arg.name, arg.typ) for arg in self.Args])
+		#self.updateArgs()
+		args = str([arg.__repr__() for arg in self.Args])
+		#args = str([' {}-{} '.format(arg.name, arg.typ) for arg in self.Args
+		#			if type(arg) is Argument else arg.__repr__()
 		return '{}-{}{}'.format(self.root.truth, self.root.name, self.typ) + args
 
 		
@@ -321,7 +322,7 @@ class PlanElementGraph(ElementGraph):
 
 		return cost
 
-	def relaxedPre(self, GL, pre, visited = None):
+	def relaxedPre(self, GL, pre, visited=None):
 		if visited == None:
 			visited = collections.defaultdict(int)
 

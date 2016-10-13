@@ -101,6 +101,13 @@ class PlanSpacePlanner:
 			DPlan.initial_dummy_step = s_init.root
 			DPlan.final_dummy_step = s_goal.root
 			DPlan.OrderingGraph.addOrdering(s_init.root, s_goal.root)
+			ok = True
+			for prec in s_goal.preconditions:
+				if len(GL.id_dict[prec.replaced_ID]) == 0:
+					ok = False
+					break
+			if not ok:
+				continue
 			init_flaws = (Flaw((s_goal.root, prec), 'opf') for prec in s_goal.preconditions)
 			for flaw in init_flaws:
 				DPlan.flaws.insert(GL, DPlan, flaw)
