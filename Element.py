@@ -105,9 +105,6 @@ class InternalElement(Element):
 		if num_args == None:
 			num_args = 0
 		self.num_args = num_args
-
-	def __hash__(self):
-		return hash(self.ID)
 	
 	def isEquivalent(self, other):
 		if not super(InternalElement,self).isEquivalent(other):
@@ -137,15 +134,13 @@ class InternalElement(Element):
 				return False
 
 		#If other has a predicate name, then return False if they are not the same
-		if not self.name is None and not other.name is None:
+		if self.name is not None and other.name is not None:
 			if self.name != other.name:
 				return False
 				
 		return True
 		
 	def merge(self,other):
-		"""Element merge assumes co-consistent 
-			and places None properties of self with non-None propeties of other"""
 			
 		if super(InternalElement,self).merge(other) is None:
 			return None
@@ -154,8 +149,6 @@ class InternalElement(Element):
 			self.num_args = other.num_args
 			
 		return self
-		
-
 		
 class Operator(InternalElement):
 	stepnumber = 0
