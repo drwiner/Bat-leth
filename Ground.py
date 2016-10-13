@@ -4,7 +4,6 @@ import copy
 from collections import namedtuple, defaultdict
 from PlanElementGraph import Condition, Action
 from clockdeco import clock
-from uuid import uuid1 as uid
 from Element import Argument, Actor, Operator, Literal
 from ElementGraph import ElementGraph
 

@@ -6,7 +6,10 @@ from clockdeco import clock
 from Element import Argument, Element, Operator, Literal
 from Graph import Edge
 from ElementGraph import ElementGraph
-
+from Reuse import ReuseLib
+from GlobalContainer import GC
+import copy
+import collections
 
 class Action(ElementGraph):
 	#stepnumber = 2
@@ -140,6 +143,9 @@ class Condition(ElementGraph):
 		super(Condition,self).__init__(ID, type_graph, name, Elements, root_element, Edges, Restrictions)
 
 
+	def __hash__(self):
+		return hash(arg for arg in self.Args) ^ hash(self.name)
+
 	def isConsistent(self, other):
 		if isinstance(other, ElementGraph):
 			return self.isConsistentSubgraph(other)
@@ -183,6 +189,8 @@ class PlanElementGraph(ElementGraph):
 									
 		super(PlanElementGraph,self).__init__(ID, type_graph, name, Elements, plan_elm, Edges, Restrictions)
 
+	def __hash__(self):
+		return hash(self.name) ^ hash(self.typ) ^ hash(self.ID)
 
 	@classmethod
 	def Actions_2_Plan(cls, Actions):
@@ -190,14 +198,14 @@ class PlanElementGraph(ElementGraph):
 
 		elements = set().union(*[A.elements for A in Actions])
 		edges = set().union(*[A.edges for A in Actions])
-		Plan = cls(uid(2), name='Action_2_Plan', Elements=elements, Edges=edges)
+		Plan = cls(name='Action_2_Plan', Elements=elements, Edges=edges)
 		for edge in Plan.edges:
 			if edge.label == 'effect-of':
 				elm = Plan.getElementById(edge.sink.ID)
 				elm.replaced_ID = edge.sink.replaced_ID
 
-		Plan.OrderingGraph = OrderingGraph(ID=uid(5))
-		Plan.CausalLinkGraph = CausalLinkGraph(ID=uid(6))
+		Plan.OrderingGraph = OrderingGraph()
+		Plan.CausalLinkGraph = CausalLinkGraph()
 		#Plan.Steps = [A.root for A in Actions]
 		return Plan
 
@@ -226,7 +234,7 @@ class PlanElementGraph(ElementGraph):
 
 	@clock
 	def Unify(self, other, GL):
-		from Plannify import ReuseLib
+
 		OSteps = other.Steps
 		SSteps = self.Steps
 
@@ -361,7 +369,7 @@ class PlanElementGraph(ElementGraph):
 		@return:
 		"""
 		try:
-			from GlobalContainer import GC
+
 			if self.name == 'story':
 				return self.calculateHeuristic(GC.SGL)
 			return self.calculateHeuristic(GC.DGL)

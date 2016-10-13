@@ -5,7 +5,7 @@ from Flaws import Flaw
 from heapq import heappush, heappop
 from clockdeco import clock
 from Ground import reload, GLib
-
+import copy
 
 """
 	Algorithm for Plan-Graph-Space search of Story Plan
@@ -72,7 +72,7 @@ class PlanSpacePlanner:
 		s_goal = copy.deepcopy(GL[-1])
 		s_goal.replaceInternals()
 
-		s_init_plan = PlanElementGraph(uid(0), name=plan_name, Elements=self.story_objs|s_init.elements|s_goal.elements,
+		s_init_plan = PlanElementGraph(name=plan_name, Elements=self.story_objs|s_init.elements|s_goal.elements,
 									   Edges=s_init.edges|s_goal.edges)
 
 		s_init_plan.initial_dummy_step = s_init.root
@@ -94,7 +94,7 @@ class PlanSpacePlanner:
 		for GA in GL.Goal_Actions:
 			s_goal = copy.deepcopy(GA)
 			s_init = copy.deepcopy(init)
-			DPlan = PlanElementGraph(uid(0), name='disc',
+			DPlan = PlanElementGraph(name='disc',
 									 Elements=s_init.elements | s_goal.elements | self.story_objs | disc_objects,
 									 Edges=s_init.edges | s_goal.edges)
 
