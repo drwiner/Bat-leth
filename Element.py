@@ -21,7 +21,7 @@ class Element:
 	"""Element is a token or label with the following attributes"""
 	def __init__(self, ID=None, typ=None, name=None, arg_name=None):
 		if ID is None:
-			ID = uuid4
+			ID = uuid4()
 
 		self.ID = ID
 		self.typ = typ
@@ -58,15 +58,14 @@ class Element:
 					other's parameter cannot be None
 		"""
 
-		if not self.typ is None:
+		if self.typ is not None:
 			if self.typ != other.typ:
 				return False
 		else:
-			if not other.typ is None:
+			if other.typ is not None:
 				return False
 
 		return True
-
 
 	def __eq__(self, other):
 		if other is None:
@@ -86,9 +85,9 @@ class Element:
 			return None
 		if self.isEquivalent(other):
 			return self
-		if self.typ is None and not other.typ is None:
+		if self.typ is None and other.typ is not None:
 			self.typ = other.typ
-		if self.name is None and not other.name is None:
+		if self.name is None and other.name is not None:
 			self.name = other.name
 		return self
 
@@ -160,7 +159,7 @@ class Operator(InternalElement):
 			num_args = 0
 		if stepnumber is None:
 			stepnumber = Operator.stepnumber
-			Operator.stepnumber+=1
+			Operator.stepnumber += 1
 		else:
 			Operator.stepnumber = stepnumber + 1
 		
@@ -175,17 +174,17 @@ class Operator(InternalElement):
 		return False
 		
 	def isConsistent(self,other):
-		if not super(Operator,self).isConsistent(other):
+		if not super(Operator, self).isConsistent(other):
 			return False
 		
-		if not other.executed is None and not self.executed is None:
+		if other.executed is not None and self.executed is not None:
 			if self.executed != other.executed:
 				return False
 		
 		return True
 		
 	def merge(self, other):
-		if super(Operator,self).merge(other) is None:
+		if super(Operator, self).merge(other) is None:
 			return None
 
 		if not other.executed is None and self.executed is None:
@@ -198,8 +197,8 @@ class Operator(InternalElement):
 			exe = ''
 		else:
 			exe = '-' + self.executed
-		id = str(self.ID)[19:23]
-		return 'operator{}-{}-{}-{}'.format(exe, self.name, self.stepnumber, id)
+		uid = str(self.ID)[19:23]
+		return 'operator{}-{}-{}-{}'.format(exe, self.name, self.stepnumber, uid)
 
 		
 class Literal(InternalElement):
@@ -218,7 +217,7 @@ class Literal(InternalElement):
 		if not super(Literal,self).isConsistent(other):
 			return False
 				
-		if not self.truth is None and not other.truth is None:
+		if self.truth is not None and other.truth is not None:
 			if self.truth != other.truth:
 				return False
 	
@@ -236,11 +235,11 @@ class Literal(InternalElement):
 		if not super(Literal, self).isEquivalent(other):
 			return False
 			
-		if not self.truth is None:
+		if self.truth is not None:
 			if self.truth != other.truth:
 				return False
 		else:
-			if not other.truth is None:
+			if other.truth is not None:
 				return False
 				
 			
@@ -250,7 +249,7 @@ class Literal(InternalElement):
 		if super(Literal,self).merge(other) is None:
 			return None
 			
-		if self.truth is None and not other.truth is None:
+		if self.truth is None and other.truth is not None:
 			self.truth = other.truth
 			
 		return self
@@ -272,22 +271,22 @@ class Argument(Element):
 		""" 'equivalent' arguments are consistent and have been assigned the same name """
 
 		if not super(Argument,self).isEquivalent(other):
-			if not self.typ in GC.object_types[other.typ] and not other.typ in GC.object_types[self.typ]:
+			if self.typ not in GC.object_types[other.typ] and other.typ not in GC.object_types[self.typ]:
 				return False
 		
-		if not self.name is None:
+		if self.name is not None:
 			if other.name != self.name:
 				return False
 		else:
-			if not other.name is None:
+			if other.name is not None:
 				return False		
 		return True
 
 	def isConsistentType(self, other):
 		if not self.typ == other.typ:
 			try:
-				if not self.typ in GC.object_types[other.typ.lower()] and \
-						not other.typ in GC.object_types[self.typ.lower()]:
+				if self.typ not in GC.object_types[other.typ.lower()] and \
+						other.typ not in GC.object_types[self.typ.lower()]:
 					return False
 			except:
 				raise TypeError('what self {} / other {} typs are these?'.format(self.typ, other.typ))
@@ -306,7 +305,7 @@ class Argument(Element):
 		return self
 		
 	def __repr__(self):
-		id = str(self.ID)[19:23]
+		shrt_id = str(self.ID)[19:23]
 		if self.arg_name is None:
 			arg_name = ''
 		else:
@@ -315,7 +314,7 @@ class Argument(Element):
 			name = ''
 		else:
 			name = '-' + self.name
-		return 'arg-{}-{}{}{}'.format(id, self.typ, name,  arg_name)
+		return 'arg-{}-{}{}{}'.format(shrt_id, self.typ, name,  arg_name)
 	
 
 class Actor(Argument):
@@ -333,7 +332,7 @@ class Actor(Argument):
 		return self
 		
 	def __repr__(self):
-		id = str(self.ID)[19:23]
+		shrt_id = str(self.ID)[19:23]
 		if self.arg_name is None:
 			arg_name = ''
 		else:
@@ -342,7 +341,7 @@ class Actor(Argument):
 			name = ''
 		else:
 			name = '-' + self.name
-		return 'actor-{}-{}{}{}'.format(id, self.typ, name, arg_name)
+		return 'actor-{}-{}{}{}'.format(shrt_id, self.typ, name, arg_name)
 
 class PlanElement(Element):
 
