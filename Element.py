@@ -38,25 +38,18 @@ class Element:
 		return True
 
 	def isConsistentType(self, other):
-		if not self.typ is None and not other.typ is None:
+		if self.typ is not None and other.typ is not None:
 			if self.typ != other.typ:
 				return False
 		return True
 
 	def isConsistentName(self, other):
-		if not self.name is None and not other.name is None:
+		if self.name is not None and other.name is not None:
 			if self.name != other.name:
 				return False
 		return True
 
 	def isEquivalent(self, other):
-		"""Another element is equivalent with self iff 
-				for each non-None parameter in self, 
-					other's parameter == 
-					and cannot be None
-				and if for each None parameter in self,
-					other's parameter cannot be None
-		"""
 
 		if self.typ is not None:
 			if self.typ != other.typ:
@@ -73,7 +66,7 @@ class Element:
 		return self.name == other.name
 
 	def __ne__(self, other):
-		return (not self.__eq__(other))
+		return not self.__eq__(other)
 
 	def __hash__(self):
 		return hash(self.ID)
