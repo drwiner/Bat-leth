@@ -269,7 +269,10 @@ class PlanElementGraph(ElementGraph):
 				new_plan.OrderingGraph.addEdge(UW[ord.source.position], UW[ord.sink.position])
 
 			for link in other.CausalLinkGraph.edges:
-				Source = Action.subgraph(new_plan, UW[link.source.position])
+				try:
+					Source = Action.subgraph(new_plan, new_plan.getElmByRID(UW[link.source.position].replaced_ID))
+				except:
+					raise
 				new_d = Source.getElmByRID(link.label.replaced_ID)
 				if new_d is None:
 					Sink = Action.subgraph(new_plan, UW[link.sink.position])
@@ -279,7 +282,8 @@ class PlanElementGraph(ElementGraph):
 				new_plan.CausalLinkGraph.addEdge(UW[link.source.position], UW[link.sink.position], new_d)
 
 			for step in UW:
-				Step = Action.subgraph(new_plan, step)
+				Step = Action.subgraph(new_plan, new_plan.getElmByRID(step.replaced_ID))
+
 				for pre in Step.preconditions:
 					cndts = {edge for edge in new_plan.edges if isinstance(edge.source, Operator) and edge.sink == pre}
 					if len(cndts) == 0:

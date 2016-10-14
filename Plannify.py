@@ -163,13 +163,6 @@ def Groundify(Planets, GL, has_links):
 				pre_link.sink = _link.label
 				NP.edges.add(pre_link)
 
-			# elms = set()
-			# edges = set()
-			# for S in NP.Step_Graphs:
-			# 	elms.update(S.elements)
-			# 	edges.update(S.edges)
-			# NP.elements = elms
-			# NP.edges = edges
 			Discovered_Planets.append(NP)
 
 	return Discovered_Planets

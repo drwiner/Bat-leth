@@ -9,20 +9,6 @@ from uuid import uuid4
 from Flaws import FlawLib
 
 ARGLABELS = ['first-arg', 'sec-arg','third-arg', 'fourth-arg', 'fifth-arg']
-
-def parseDomain(domain_file):
-	parser = Parser(domain_file)
-	domain = parser.parse_domain_drw()
-	return domain
-
-
-def parse(domain_file, problem_file):
-	# Parsing
-	parser = Parser(domain_file, problem_file)
-	domain = parser.parse_domain()
-	problem = parser.parse_problem(domain)
-
-	return problem
 	
 def makeGoal(formula):
 	if formula.key == 'not':
@@ -59,7 +45,7 @@ def getNonEquals(formula, op_graph, elements, edges):
 	edge2 = next(edge for edge in edges if edge.source.typ == 'Action' and edge.sink == arg2)
 	i1 = ARGLABELS.index(edge1.label)
 	i2 = ARGLABELS.index(edge2.label)
-	op_graph.nonequals.add((i1,i2))
+	op_graph.nonequals.add((i1, i2))
 
 def getSubFormulaGraph(formula, op_graph, parent=None, relationship=None, elements=None, edges=None):
 	if elements is None:
@@ -161,12 +147,12 @@ def decorateElm(child, DG):
 	elif child.key == 'nth-step-arg' or child.key == 'nth-lit-arg':
 		args = child.children
 		label = ARGLABELS[int(args[0].key)]
-		parent_elm = whichElm(args[1].key.name,DG)
+		parent_elm = whichElm(args[1].key.name, DG)
 		child_elm = whichElm(args[2].key.name, DG)
 		DG.edges.add(Edge(parent_elm, child_elm, label))
 	elif child.key == 'includes':
 		arg1, arg2 = child.children
-		DG.edges.add(Edge(whichElm(arg1.key.name,DG),whichElm(arg2.key.name,DG),'arg-of'))
+		DG.edges.add(Edge(whichElm(arg1.key.name, DG), whichElm(arg2.key.name, DG), 'arg-of'))
 	elif child.key == 'truth':
 		lit, value = child.children
 		lit = whichElm(lit.key.name, DG)
@@ -178,13 +164,13 @@ def decorateElm(child, DG):
 		label = child.key + '-of'
 		arg1, arg2 = child.children
 		if len(arg2.children) > 0:
-			child_elm = litFromArg(arg2,DG)
+			child_elm = litFromArg(arg2, DG)
 		else:
-			child_elm = whichElm(arg2.key.name,DG)
-		DG.edges.add(Edge(whichElm(arg1.key.name,DG), child_elm, label))
+			child_elm = whichElm(arg2.key.name, DG)
+		DG.edges.add(Edge(whichElm(arg1.key.name, DG), child_elm, label))
 	elif child.key == 'linked':
 		arg1, arg2 = child.children
-		dep = Literal(arg_name='link-condition'+str(uid(1))[19:23])
+		dep = Literal(arg_name='link-condition'+str(uuid4())[19:23])
 		Src = whichElm(arg1.key.name, DG)
 		Snk = whichElm(arg2.key.name, DG)
 		DG.CausalLinkGraph.addEdge(Src, Snk, dep)
@@ -229,7 +215,7 @@ def litFromArg(arg,DG):
 		arg = arg.children[0]
 	# arg 2 is written out
 	lit_name = arg.key
-	lit_elm = Literal(name=lit_name, arg_name=lit_name+str(uid(1))[19:23], num_args=len(arg.children), truth=neg)
+	lit_elm = Literal(name=lit_name, arg_name=lit_name+str(uuid4())[19:23], num_args=len(arg.children), truth=neg)
 	for i, ch in enumerate(arg.children):
 		e_i = whichElm(ch.key.name, DG)
 		DG.edges.add(Edge(lit_elm, e_i, ARGLABELS[i]))
@@ -321,6 +307,13 @@ def domainToOperatorGraphs(domain):
 			decomp_graph = PlanElementGraph(name=action.name, type_graph='decomp')
 			getDecompGraph(action.decomp.formula, decomp_graph, action.parameters)
 			op_graph.subgraphs.add(decomp_graph)
+			for step_elm in op_graph.elements:
+				for d_elm in decomp_graph.elements:
+					if not isinstance(d_elm, Argument):
+						continue
+					if d_elm.arg_name == step_elm.arg_name:
+						op_graph.assign(step_elm, d_elm)
+
 
 		opGraphs.add(op_graph)
 	return opGraphs

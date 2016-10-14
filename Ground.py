@@ -59,11 +59,16 @@ def assignStoryToDisc(GDO, SP, elm, ex_elms):
 		if ex_elm.arg_name is None:
 			continue
 		if elm.arg_name != ex_elm.arg_name:
-			continue
+			if isinstance(elm, Argument):
+				if elm.name != ex_elm.name:
+					continue
+			else:
+				continue
 
 		EG = elm
 		if elm.typ in {'Action', 'Condition'}:
 			EG = eval(elm.typ).subgraph(SP, elm)
+
 		GDO.assign(ex_elm, EG)
 
 

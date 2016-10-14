@@ -45,7 +45,7 @@ class PlanSpacePlanner:
 		if disc_objects is not None:
 			self.disc_GL = disc_GL
 			self.disc_objects = disc_objects
-			Discourse_Plans = self.multiGoalSetup(self.disc_GL, disc_objects)
+			Discourse_Plans = self.multiGoalSetup(self.disc_GL)
 			for DP in Discourse_Plans:
 				self.Open.insert(BiPlan(SP.deepcopy(), DP))
 		else:
@@ -86,7 +86,7 @@ class PlanSpacePlanner:
 			s_init_plan.flaws.insert(GL, s_init_plan, flaw)
 		return s_init_plan
 
-	def multiGoalSetup(self, GL, disc_objects):
+	def multiGoalSetup(self, GL):
 		#s_init is in the back for a multi-goal setup
 		init = copy.deepcopy(GL[-1])
 		init.replaceInternals()
@@ -95,22 +95,17 @@ class PlanSpacePlanner:
 			s_goal = copy.deepcopy(GA)
 			s_init = copy.deepcopy(init)
 			DPlan = PlanElementGraph(name='disc',
-									 Elements=s_init.elements | s_goal.elements | self.story_objs | disc_objects,
+									 Elements=s_init.elements | s_goal.elements,
 									 Edges=s_init.edges | s_goal.edges)
 
 			DPlan.initial_dummy_step = s_init.root
 			DPlan.final_dummy_step = s_goal.root
 			DPlan.OrderingGraph.addOrdering(s_init.root, s_goal.root)
-		#	ok = True
-		#	for prec in s_goal.preconditions:
-		#		if len(GL.id_dict[prec.replaced_ID]) == 0:
-		##			break
-		#	if not ok:
-		#		continue
+
 			init_flaws = (Flaw((s_goal.root, prec), 'opf') for prec in s_goal.preconditions)
 			for flaw in init_flaws:
 				DPlan.flaws.insert(GL, DPlan, flaw)
-			#if s_goal.stepnumber == 116:
+			DPlan.flaws.insert(GL, DPlan, Flaw(s_goal.stepnumber, 'dcf'))
 			DPlans.append(DPlan)
 		return DPlans
 
@@ -227,11 +222,9 @@ class PlanSpacePlanner:
 		if new:
 			for prec in plan.getIncidentEdgesByLabel(s_add, 'precond-of'):
 				plan.flaws.insert(GL, plan, Flaw((s_add, prec.sink), 'opf'))
-			#if plan.name == 'disc':
-			#	plan.flaws.insert(GL, plan, Flaw(s_add.stepnumber, 'dcf'))
+			if plan.name == 'disc':
+				plan.flaws.insert(GL, plan, Flaw(s_add.stepnumber, 'dcf'))
 
-		#Good time as ever to updatePlan
-		#plan.updatePlan()
 		return plan
 
 	#@clock
