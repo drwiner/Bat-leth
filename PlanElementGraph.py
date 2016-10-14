@@ -250,6 +250,9 @@ class PlanElementGraph(ElementGraph):
 
 		Uni_Libs = [ReuseLib(i, s_add, SSteps) for i, s_add in enumerate(OSteps)]
 		Uni_Worlds = itertools.product(*Uni_Libs)
+		for ul  in Uni_Libs:
+			if len(ul._cndts) > 1:
+				pass
 
 		New_Plans = set()
 		for UW in Uni_Worlds:
@@ -270,7 +273,8 @@ class PlanElementGraph(ElementGraph):
 
 			for link in other.CausalLinkGraph.edges:
 				try:
-					Source = Action.subgraph(new_plan, new_plan.getElmByRID(UW[link.source.position].replaced_ID))
+					Source = Action.subgraph(new_plan, UW[link.source.position])
+					#Source = Action.subgraph(new_plan, new_plan.getElmByRID(UW[link.source.position].replaced_ID))
 				except:
 					raise
 				new_d = Source.getElmByRID(link.label.replaced_ID)
@@ -282,7 +286,8 @@ class PlanElementGraph(ElementGraph):
 				new_plan.CausalLinkGraph.addEdge(UW[link.source.position], UW[link.sink.position], new_d)
 
 			for step in UW:
-				Step = Action.subgraph(new_plan, new_plan.getElmByRID(step.replaced_ID))
+				Step = Action.subgraph(new_plan, step)
+				#Step = Action.subgraph(new_plan, new_plan.getElmByRID(step.replaced_ID))
 
 				for pre in Step.preconditions:
 					cndts = {edge for edge in new_plan.edges if isinstance(edge.source, Operator) and edge.sink == pre}
@@ -310,15 +315,14 @@ class PlanElementGraph(ElementGraph):
 	def RemoveSubgraph(self, literal):
 		elm = self.getElementById(literal.ID)
 		link = None
-		to_remove = set()
-		for edge in self.edges:
+		self.elements.remove(elm)
+
+		for edge in list(self.edges):
 			if edge.source == elm:
-				to_remove.add(edge)
+				self.edges.remove(edge)
 			if link is None:
 				if edge.sink == elm:
 					link = edge
-		self.elements -= {elm}
-		self.edges -= to_remove
 		return link
 
 	def AddSubgraph(self, subgraph):

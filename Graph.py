@@ -102,23 +102,20 @@ class Graph(Element):
 
 		if oldsnk == newsnk:
 			return
+
+		self.assign(oldsnk, newsnk)
+
 		if self.getElementById(newsnk.ID) is None:
 			raise NameError('newsnk replacer is not found in self')
-		if oldsnk in self.elements:
-			self.elements.remove(oldsnk)
-		for incoming in (edge for edge in self.edges if edge.sink == oldsnk):
-			incoming.sink = newsnk
+
+
 		#update constraint edges which might reference specific elements being replaced
 		for r in self.subgraphs:
-			for r_edge in r.edges:
-				if r_edge.source == oldsnk:
-					if r_edge.source in r.elements:
-						r.elements.add(newsnk)
-					r.replaceWith(r_edge.source, newsnk)
-				if r_edge.sink == oldsnk:
-					if r_edge.sink in r.elements:
-						r.elements.add(newsnk)
-					r.replaceWith(r_edge.sink, newsnk)
+			r.assign(oldsnk, newsnk)
+
+		if hasattr(self, 'ground_subplan'):
+			self.ground_subplan.assign(oldsnk, newsnk)
+
 		return self
 
 	def assign(self, old_elm_in_edge, new_elm, remove_old=True):

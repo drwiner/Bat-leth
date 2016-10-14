@@ -55,17 +55,21 @@ class ElementGraph(Graph):
 
 
 	@classmethod
-	def subgraph(cls, EG, elm):
+	def subgraph(cls, EG, e):
 		"""
 		INPLACE subgraph - still references same parent
 		"""
+
+		#try:
+		elm = EG.getElementById(e.ID)
 		if elm is None:
-			raise ValueError('elm {} is None?'.format(elm))
-		elm = EG.getElementById(elm.ID)
-		try:
-			edges = EG.rGetDescendantEdges(elm)
-		except:
+			print(e)
 			raise
+		#except:
+		#	elm = EG.getElmByRID(elm.replaced_ID)
+		#	raise ValueError('elm {} is None?'.format(elm))
+
+		edges = EG.rGetDescendantEdges(elm)
 		elms = {edge.source for edge in edges}|{edge.sink for edge in edges}|{elm}
 		new_EG= cls(elm.ID, elm.typ, name=None, root_element=elm, Elements=elms, Edges=edges)
 		new_EG.updateArgs()

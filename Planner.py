@@ -167,7 +167,7 @@ class PlanSpacePlanner:
 			return set()
 
 		for s_old in plan.Steps:
-			if not s_old.stepnumber in antecedents:
+			if s_old.stepnumber not in antecedents:
 				continue
 			if s_old == s_need:
 				continue
@@ -177,13 +177,14 @@ class PlanSpacePlanner:
 
 			#step 2 - Actionize the steps from new_plan
 			S_Old = Action.subgraph(new_plan, s_old)
-			S_Need = Action.subgraph(new_plan, s_need)
+			s_need_new = new_plan.getElementById(s_need.ID)
+			#S_Need = Action.subgraph(new_plan, s_need)
 
 			#step 3-4 retarget precondition to be s_old effect
 			pre_link_sink = self.RetargetPrecondition(GL, new_plan, S_Old, precondition)
 
 			#step 5 - add orderings, causal links, and create flaws
-			self.addStep(new_plan, S_Old.root, S_Need.root, pre_link_sink, GL, new=False)
+			self.addStep(new_plan, S_Old.root, s_need_new, pre_link_sink, GL, new=False)
 
 			#step 6 - add new plan to open list
 			results.add(new_plan)
@@ -191,11 +192,15 @@ class PlanSpacePlanner:
 		return results
 
 	def RetargetPrecondition(self, GL, plan, S_Old, precondition):
+
 		effect_token = GL.getConsistentEffect(S_Old, precondition)
 		pre_link = plan.RemoveSubgraph(precondition)
+
+		#mutate in isolation
 		plan.edges.remove(pre_link)
 		pre_link.sink = effect_token
 		plan.edges.add(pre_link)
+
 		return pre_link.sink
 
 	def addStep(self, plan, s_add, s_need, condition, GL, new=None):
@@ -239,13 +244,15 @@ class PlanSpacePlanner:
 		#Promotion
 		promotion = plan.deepcopy()
 		promotion.OrderingGraph.addEdge(causal_link.sink, threat)
-		results.add(promotion)
+		if promotion.OrderingGraph.isInternallyConsistent():
+			results.add(promotion)
 
 
 		#Demotion
 		demotion = plan.deepcopy()
 		demotion.OrderingGraph.addEdge(threat, causal_link.source)
-		results.add(demotion)
+		if demotion.OrderingGraph.isInternallyConsistent():
+			results.add(demotion)
 
 		return results
 
@@ -322,7 +329,7 @@ class PlanSpacePlanner:
 			#Select Flaw
 			k, flaw = plan.next_flaw()
 			#k = 0:story, 1:disc
-			#print('{} selected : {}\n'.format(flaw.name, flaw))
+			print('{} selected : {}\n'.format(flaw.name, flaw))
 
 			#Add children to Open List
 			children = self.generateChildren(plan, k, flaw)

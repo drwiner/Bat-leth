@@ -54,6 +54,8 @@ def groundDiscList(operators, SGL, stepnum=0):
 
 	return gsteps
 
+
+
 def assignStoryToDisc(GDO, SP, elm, ex_elms):
 	for ex_elm in ex_elms:
 		if ex_elm.arg_name is None:

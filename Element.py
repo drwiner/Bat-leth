@@ -164,10 +164,15 @@ class Operator(InternalElement):
 		return hash(self.ID)
 
 	def __eq__(self, other):
-		if self.name == other.name:
-			if self.stepnumber == other.stepnumber:
-				return True
-		return False
+		if other is None:
+			#this ain't good
+			raise ValueError('self {}  == other {}, other is None'.format(self, other))
+			#return False
+		return self.ID == other.ID
+		#if self.name == other.name:
+		#	if self.stepnumber == other.stepnumber:
+	#			return True
+	#	return False
 		
 	def isConsistent(self,other):
 		if not super(Operator, self).isConsistent(other):
