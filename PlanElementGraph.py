@@ -48,16 +48,17 @@ class Action(ElementGraph):
 
 	def RemoveSubgraph(self, elm):
 		elm = self.getElementById(elm.ID)
+
+		if isinstance(elm, Literal):
+			self.elements.remove(elm)
+
 		link = None
-		to_remove = set()
-		for edge in self.edges:
+		for edge in list(self.edges):
 			if edge.source == elm:
-				to_remove.add(edge)
+				self.edges.remove(edge)
 			if link is None:
 				if edge.sink == elm:
 					link = edge
-		self.elements -= {elm}
-		self.edges -= to_remove
 		return link
 
 	def getPreconditionsOrEffects(self, label):

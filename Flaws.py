@@ -151,7 +151,7 @@ class FlawLib():
 
 	@property
 	def flaws(self):
-		return [flaw for i, flaw_set in enumerate(self.typs) for flaw in flaw_set if i != 2]
+		return [flaw for i, flaw_set in enumerate(self.typs) for flaw in flaw_set if i != 2 and i !=3]
 
 
 	def OCs(self):

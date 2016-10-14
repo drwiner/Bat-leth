@@ -101,13 +101,12 @@ class PlanSpacePlanner:
 			DPlan.initial_dummy_step = s_init.root
 			DPlan.final_dummy_step = s_goal.root
 			DPlan.OrderingGraph.addOrdering(s_init.root, s_goal.root)
-			ok = True
-			for prec in s_goal.preconditions:
-				if len(GL.id_dict[prec.replaced_ID]) == 0:
-					ok = False
-					break
-			if not ok:
-				continue
+		#	ok = True
+		#	for prec in s_goal.preconditions:
+		#		if len(GL.id_dict[prec.replaced_ID]) == 0:
+		##			break
+		#	if not ok:
+		#		continue
 			init_flaws = (Flaw((s_goal.root, prec), 'opf') for prec in s_goal.preconditions)
 			for flaw in init_flaws:
 				DPlan.flaws.insert(GL, DPlan, flaw)
@@ -330,7 +329,7 @@ class PlanSpacePlanner:
 			#Select Flaw
 			k, flaw = plan.next_flaw()
 			#k = 0:story, 1:disc
-			print('{} selected : {}\n'.format(flaw.name, flaw))
+			#print('{} selected : {}\n'.format(flaw.name, flaw))
 
 			#Add children to Open List
 			children = self.generateChildren(plan, k, flaw)

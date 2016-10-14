@@ -34,6 +34,7 @@ def groundStoryList(operators, objects, obtypes):
 			gstep.replaceArgs(t)
 			gsteps.append(gstep)
 	return gsteps
+
 def groundDiscList(operators, SGL, stepnum=0):
 
 	#For each ground subplan in Subplans, make a copy of DO s.t. each
