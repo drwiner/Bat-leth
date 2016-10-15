@@ -6,6 +6,7 @@ from heapq import heappush, heappop
 from clockdeco import clock
 from Ground import reload, GLib
 from Graph import retargetArgs, retargetElmsInArgs, isIdenticalElmsInArgs
+from Plannify import Unify
 from functools import partial
 import copy
 
@@ -151,7 +152,7 @@ class PlanSpacePlanner:
 				#Retarget elements in args in ground subplan
 				retargetElmsInArgs(anteaction.ground_subplan, PArgs, EArgs)
 				#Then, add a flaw which says, add ground subplan, first looking if elm.ID already exists
-				plan.flaws.decomps.add(Flaw(anteaction.ground_subplan, 'dcf'))
+				new_plan.flaws.decomps.add(Flaw(anteaction.ground_subplan, 'dcf'))
 			else:
 
 				#step 4 - set sink before replace internals
@@ -217,8 +218,8 @@ class PlanSpacePlanner:
 
 		if plan.name == 'disc':
 			#retargetArgs()
-			Eff = Condition.subgraph(S_Old, effect_token).Args
-			Pre = Condition.subgraph(plan, precondition).Args
+			Eff = list(Condition.subgraph(S_Old, effect_token).Args)
+			Pre = list(Condition.subgraph(plan, precondition).Args)
 			if not isIdenticalElmsInArgs(Pre, Eff):
 				return False
 
@@ -305,7 +306,7 @@ class PlanSpacePlanner:
 		elif flaw.name == 'dcf':
 			print(GL[flaw.flaw].name)
 			story = other.deepcopy()
-			results = story.Unify(flaw.flaw, self.story_GL)
+			results = Unify(story, flaw.flaw, self.story_GL)
 			print(len(results))
 			GL = self.story_GL
 			other = plan.D

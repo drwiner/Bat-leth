@@ -2,6 +2,9 @@ import itertools
 from PlanElementGraph import Action, PlanElementGraph
 from Graph import Edge
 from clockdeco import clock
+from Reuse import ReuseLib
+from Flaws import Flaw
+from Element import Operator
 
 @clock
 def Plannify(RQ, GL):
@@ -255,3 +258,88 @@ class LinkLib:
 
 	def __repr__(self):
 		return '{}-- link-pos {} --> {}'.format(self.source, self.position, self.sink)
+
+
+@clock
+def Unify(story, other, GL):
+	#self is story, other is ground subplan, which may have elements/IDs already in story.
+
+	SSteps = set(story.Steps)
+	Uni_Libs = [ReuseLib(i, s_add, SSteps) for i, s_add in enumerate(other.Steps)]
+	Uni_Worlds = itertools.product(*Uni_Libs)
+	# for ul  in Uni_Libs:
+	# 	if len(ul._cndts) > 1:
+	# 		pass
+
+	New_Plans = set()
+	for UW in Uni_Worlds:
+		new_plan = story.deepcopy()
+
+		#For each step not already in story, add
+		AddNewSteps(UW, other, SSteps, new_plan)
+
+		for ord in other.OrderingGraph.edges:
+			new_plan.OrderingGraph.addEdge(UW[ord.source.position], UW[ord.sink.position])
+
+		for link in other.CausalLinkGraph.edges:
+			if UW[link.source.position] in SSteps and UW[link.sink.position] in SSteps:
+				continue
+			if UW[link.sink.position] not in SSteps:
+				#If its a new step, then there aren'tany flaws to remove
+				AddLink(link, new_plan, UW, remove_flaw=False)
+			else:
+				#if its already in plan, then remove flaw for tat dependency
+				AddLink(link, new_plan, UW, remove_flaw=True)
+
+		#Add new flaws for other steps
+		for step in UW:
+			if step not in SSteps:
+				AddNewFlaws(GL, step, new_plan)
+
+		if new_plan.isInternallyConsistent():
+			New_Plans.add(new_plan)
+
+	return New_Plans
+
+def AddNewSteps(UW, other, SSteps, new_plan):
+	for step in UW:
+		if step not in SSteps:
+			S_new = Action.subgraph(other, step).deepcopy()
+			S_new.root.arg_name = step.stepnumber
+			# move pieces
+			new_plan.elements.update(S_new.elements)
+			new_plan.edges.update(S_new.edges)
+			# place in order
+			new_plan.OrderingGraph.addEdge(new_plan.initial_dummy_step, S_new.root)
+			new_plan.OrderingGraph.addEdge(S_new.root, new_plan.final_dummy_step)
+
+def AddNewFlaws(GL, step, new_plan):
+	Step = Action.subgraph(new_plan, step)
+	# Step = Action.subgraph(new_plan, new_plan.getElmByRID(step.replaced_ID))
+
+	for pre in Step.preconditions:
+		#this is a hack, if the precondition has two operator parents, then its in a causal link
+		cndts = {edge for edge in new_plan.edges if isinstance(edge.source, Operator) and edge.sink == pre}
+		if len(cndts) == 0:
+			raise ValueError('wait, no edge for this preconditon? impossible!')
+		if len(cndts) < 2:
+			new_plan.flaws.insert(GL, new_plan, Flaw((step, pre), 'opf'))
+
+	new_plan.flaws.addCndtsAndRisks(GL, step)
+
+def AddLink(link, UW, new_plan, remove_flaw=True):
+
+	Source = Action.subgraph(new_plan, UW[link.source.position])
+	new_d = Source.getElmByRID(link.label.replaced_ID)
+	if new_d is None:
+		Sink = Action.subgraph(new_plan, UW[link.sink.position])
+		new_d = Sink.getElmByRID(link.label.replaced_ID)
+		# if new_d is None:
+		# 	raise ValueError('here')
+	new_plan.CausalLinkGraph.addEdge(UW[link.source.position], UW[link.sink.position], new_d)
+
+	if remove_flaw:
+		flaws = new_plan.flaws.flaws
+		f = Flaw((UW[link.sink.position], new_d), 'opf')
+		if f in flaws:
+			new_plan.flaws.remove(f)

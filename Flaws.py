@@ -55,6 +55,9 @@ class Flawque:
 		self.insert(flaw)
 		#self._flaws.append(item)
 
+	def remove(self, flaw):
+		self._flaws.remove(flaw)
+
 	def update(self, iter):
 		for flaw in iter:
 			self.insert(flaw)
@@ -148,11 +151,15 @@ class FlawLib():
 				return True
 		return False
 
+	def remove(self, flaw):
+		for flaw_set in self.typs:
+			if flaw in flaw_set:
+				flaw_set.remove(flaw)
+				return
 
 	@property
 	def flaws(self):
 		return [flaw for i, flaw_set in enumerate(self.typs) for flaw in flaw_set if i != 2 and i !=3]
-
 
 	def OCs(self):
 		''' Generator for open conditions'''

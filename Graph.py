@@ -296,6 +296,7 @@ def isIdenticalElmsInArgs(C1, C2):
 			#	return False
 	return True
 
+@clock
 def retargetElmsInArgs(GSP, C1, C2):
 	# C2 is removable, in GSP, while C1 is replacer not in GSP
 	arg_map = dict(zip(C1, C2))
