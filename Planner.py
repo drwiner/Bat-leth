@@ -1,10 +1,12 @@
 #from Flaws import *
 from pddlToGraphs import parseDomAndProb
-from PlanElementGraph import PlanElementGraph, Action, BiPlan
+from PlanElementGraph import PlanElementGraph, Action, BiPlan, Condition
 from Flaws import Flaw
 from heapq import heappush, heappop
 from clockdeco import clock
 from Ground import reload, GLib
+from Graph import retargetArgs
+from functools import partial
 import copy
 
 """
@@ -133,6 +135,12 @@ class PlanSpacePlanner:
 			#step 2 - replace its internals, to distinguish from other identical antesteps
 			(anteaction, eff_link) = cndt
 			anteaction.replaceInternals()
+			replacees = retargetArgs(anteaction.ground_subplan,
+						 Condition.subgraph(plan, precondition).Args,
+						 Condition.subgraph(anteaction, eff_link.sink).Args)
+			for elm in anteaction.ground_subplan.elements:
+				if elm not in replacees:
+					pass
 
 			#step 3 - make a copy of the plan
 			new_plan = plan.deepcopy()
@@ -194,11 +202,23 @@ class PlanSpacePlanner:
 	def RetargetPrecondition(self, GL, plan, S_Old, precondition):
 
 		effect_token = GL.getConsistentEffect(S_Old, precondition)
+
+		if plan.name == 'disc':
+			#retargetArgs()
+			Eff = Condition.subgraph(S_Old, effect_token).Args
+			Pre = Condition.subgraph(plan, precondition).Args
+
+			retarget = partial(retargetArgs, C1=Pre, C2=Eff)
+			plan.flaws.decomps.add(Flaw(retarget,'dcf'))
+		#	plan.flaws.insert(GL, plan, Flaw(s_add.stepnumber, 'dcf'))
+
 		pre_link = plan.RemoveSubgraph(precondition)
 
-		#mutate in isolation
+		#push
 		plan.edges.remove(pre_link)
+		#mutate
 		pre_link.sink = effect_token
+		#pop
 		plan.edges.add(pre_link)
 
 		return pre_link.sink

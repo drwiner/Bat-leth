@@ -47,6 +47,8 @@ class Edge:
 		self.sink.merge(other.sink)
 		
 		return self
+
+
 	
 	def swapSink(self,sink):
 		self.sink = sink
@@ -277,6 +279,17 @@ def isConsistentEdgeSet(Rem, Avail, map_=None, return_map=False):
 	return False
 
 
+def retargetArgs(GSP, C1, C2):
+	# C2 is removable, C1 is replacer
+	#This won't work as is because these Args are possibley Element Graphs, in which case we need to replace element for element.
+	raise
+	arg_map = dict(zip(C1.Args, C2.Args))
+	for elm in list(GSP.elements):
+		if elm in arg_map:
+			GSP.assign(elm, arg_map[elm])
+
+
+	return C2
 
 def findConsistentEdgeMap(Rem, Avail, map_ = None, Super_Maps = None):
 	if map_ is None:
