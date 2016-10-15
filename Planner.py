@@ -147,13 +147,14 @@ class PlanSpacePlanner:
 
 				PArgs = list(Condition.subgraph(new_plan, precondition).Args)
 				EArgs =  list(Condition.subgraph(anteaction, eff).Args)
-				#Retarget args in discourse step
+				#Retarget args in discourse step.
 				retargetArgs(anteaction, PArgs, EArgs)
 				#Retarget elements in args in ground subplan
 				retargetElmsInArgs(anteaction.ground_subplan, PArgs, EArgs)
 				#Then, add a flaw which says, add ground subplan, first looking if elm.ID already exists
 				new_plan.flaws.decomps.add(Flaw(anteaction.ground_subplan, 'dcf'))
 			else:
+				eff = eff_link.sink
 
 				#step 4 - set sink before replace internals
 				preserve_original_id = eff_link.sink.replaced_ID
@@ -161,12 +162,13 @@ class PlanSpacePlanner:
 				eff_link.sink.replaced_ID = preserve_original_id
 				new_plan.edges.add(eff_link)
 
+
 			#step 5 - add new stuff to new plan
 			new_plan.elements.update(anteaction.elements)
 			new_plan.edges.update(anteaction.edges)
 
 			#step 6 - update orderings and causal links, add flaws
-			self.addStep(new_plan, anteaction.root, new_plan.getElementById(s_need.ID), eff_link.sink, GL, new=True)
+			self.addStep(new_plan, anteaction.root, new_plan.getElementById(s_need.ID), eff, GL, new=True)
 			new_plan.flaws.addCndtsAndRisks(GL, anteaction.root)
 
 			#step 7 - add new_plan to open list

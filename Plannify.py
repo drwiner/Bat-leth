@@ -282,13 +282,11 @@ def Unify(story, other, GL):
 			new_plan.OrderingGraph.addEdge(UW[ord.source.position], UW[ord.sink.position])
 
 		for link in other.CausalLinkGraph.edges:
-			if UW[link.source.position] in SSteps and UW[link.sink.position] in SSteps:
-				continue
 			if UW[link.sink.position] not in SSteps:
 				#If its a new step, then there aren'tany flaws to remove
 				AddLink(link, new_plan, UW, remove_flaw=False)
 			else:
-				#if its already in plan, then remove flaw for tat dependency
+				#if its already in plan, then remove flaw for tat dependency.
 				AddLink(link, new_plan, UW, remove_flaw=True)
 
 		#Add new flaws for other steps
