@@ -223,7 +223,7 @@ class PlanElementGraph(ElementGraph):
 		#Used by Plannify
 
 		NG = G.deepcopy(replace_internals=True)
-		for edge in NG.edges:
+		for edge in list(NG.edges):
 
 			if edge.sink.replaced_ID == -1:
 				sink = copy.deepcopy(edge.sink)
@@ -244,8 +244,10 @@ class PlanElementGraph(ElementGraph):
 
 	@clock
 	def Unify(self, other, GL):
+		#self is story, other is ground subplan, which may have elements/IDs already in story.
 
-		OSteps = other.Steps
+		#only consider other steps if they aren't already in story!
+		OSteps = other.Steps #[step for step in other.Steps if step not in self.Steps]
 		SSteps = self.Steps
 
 		Uni_Libs = [ReuseLib(i, s_add, SSteps) for i, s_add in enumerate(OSteps)]

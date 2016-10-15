@@ -278,18 +278,44 @@ def isConsistentEdgeSet(Rem, Avail, map_=None, return_map=False):
 		#	return True
 	return False
 
+from Element import Argument
 
-def retargetArgs(GSP, C1, C2):
-	# C2 is removable, C1 is replacer
-	#This won't work as is because these Args are possibley Element Graphs, in which case we need to replace element for element.
-	raise
-	arg_map = dict(zip(C1.Args, C2.Args))
-	for elm in list(GSP.elements):
-		if elm in arg_map:
-			GSP.assign(elm, arg_map[elm])
+def isIdenticalElmsInArgs(C1, C2):
+	arg_map = zip(C1, C2)
+	for u,v in arg_map:
+		if isinstance(u, Argument):
+			if u.ID != v.ID:
+				return False
+			continue
+		for elm in u.elements:
+			if elm.ID != v.getElmByRID(elm.replaced_ID).ID:
+				return False
+	return True
 
+def retargetElmsInArgs(GSP, C1, C2):
+	# C2 is removable, in GSP, while C1 is replacer not in GSP
+	arg_map = dict(zip(C1, C2))
+	#For all args in C1/C2 which are element graphs, create a map by finding equivalent pieces via replaced_IDs. which are assumed to be the same for both. This makes sense since they are "literally" the same ground elements, but with different IDs
+	bigger_map = {}
+	for u,v in arg_map:
+		if isinstance(u, Argument):
+			bigger_map[u] = v
+			continue
+		for elm in u.elements:
+			bigger_map[elm] = v.getElmByRID(elm.replaced_ID)
 
+	#for each elm in GSP, or story, replace
+	retarget(GSP, bigger_map)
 	return C2
+
+def retargetArgs(G, C1, C2):
+	retarget(G, dict(zip(C1,C2)))
+	return C2
+
+def retarget(G, map):
+	for elm in list(G.elements):
+		if elm in map:
+			G.assign(elm, map[elm])
 
 def findConsistentEdgeMap(Rem, Avail, map_ = None, Super_Maps = None):
 	if map_ is None:

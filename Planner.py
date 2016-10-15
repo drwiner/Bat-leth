@@ -5,7 +5,7 @@ from Flaws import Flaw
 from heapq import heappush, heappop
 from clockdeco import clock
 from Ground import reload, GLib
-from Graph import retargetArgs
+from Graph import retargetArgs, retargetElmsInArgs, isIdenticalElmsInArgs
 from functools import partial
 import copy
 
@@ -135,21 +135,30 @@ class PlanSpacePlanner:
 			#step 2 - replace its internals, to distinguish from other identical antesteps
 			(anteaction, eff_link) = cndt
 			anteaction.replaceInternals()
-			replacees = retargetArgs(anteaction.ground_subplan,
-						 Condition.subgraph(plan, precondition).Args,
-						 Condition.subgraph(anteaction, eff_link.sink).Args)
-			for elm in anteaction.ground_subplan.elements:
-				if elm not in replacees:
-					pass
 
-			#step 3 - make a copy of the plan
+			# step 3 - make a copy of the plan
 			new_plan = plan.deepcopy()
 
-			#step 4 - set sink before replace internals
-			preserve_original_id = eff_link.sink.replaced_ID
-			eff_link.sink.replaced_ID = preserve_original_id
-			eff_link.sink = new_plan.getElementById(precondition.ID)
-			new_plan.edges.add(eff_link)
+			if plan.name == 'disc':
+				anteaction = GL[anteaction.stepnumber].deepcopy()
+				anteaction.replaceInternals()
+				eff = cndt.getElmByRID(eff_link.sink.replaced_ID)
+
+				PArgs = list(Condition.subgraph(new_plan, precondition).Args)
+				EArgs =  list(Condition.subgraph(anteaction, eff).Args)
+				#Retarget args in discourse step
+				retargetArgs(anteaction, PArgs, EArgs)
+				#Retarget elements in args in ground subplan
+				retargetElmsInArgs(anteaction.ground_subplan, PArgs, EArgs)
+				#Then, add a flaw which says, add ground subplan, first looking if elm.ID already exists
+				plan.flaws.decomps.add(Flaw(anteaction.ground_subplan, 'dcf'))
+			else:
+
+				#step 4 - set sink before replace internals
+				preserve_original_id = eff_link.sink.replaced_ID
+				eff_link.sink = new_plan.getElementById(precondition.ID)
+				eff_link.sink.replaced_ID = preserve_original_id
+				new_plan.edges.add(eff_link)
 
 			#step 5 - add new stuff to new plan
 			new_plan.elements.update(anteaction.elements)
@@ -190,6 +199,9 @@ class PlanSpacePlanner:
 
 			#step 3-4 retarget precondition to be s_old effect
 			pre_link_sink = self.RetargetPrecondition(GL, new_plan, S_Old, precondition)
+			if pre_link_sink is False:
+				#Can't reuse in discourse case because story elms in disc args refer to different event instances
+				continue
 
 			#step 5 - add orderings, causal links, and create flaws
 			self.addStep(new_plan, S_Old.root, s_need_new, pre_link_sink, GL, new=False)
@@ -207,13 +219,10 @@ class PlanSpacePlanner:
 			#retargetArgs()
 			Eff = Condition.subgraph(S_Old, effect_token).Args
 			Pre = Condition.subgraph(plan, precondition).Args
-
-			retarget = partial(retargetArgs, C1=Pre, C2=Eff)
-			plan.flaws.decomps.add(Flaw(retarget,'dcf'))
-		#	plan.flaws.insert(GL, plan, Flaw(s_add.stepnumber, 'dcf'))
+			if not isIdenticalElmsInArgs(Pre, Eff):
+				return False
 
 		pre_link = plan.RemoveSubgraph(precondition)
-
 		#push
 		plan.edges.remove(pre_link)
 		#mutate
@@ -247,8 +256,8 @@ class PlanSpacePlanner:
 		if new:
 			for prec in plan.getIncidentEdgesByLabel(s_add, 'precond-of'):
 				plan.flaws.insert(GL, plan, Flaw((s_add, prec.sink), 'opf'))
-			if plan.name == 'disc':
-				plan.flaws.insert(GL, plan, Flaw(s_add.stepnumber, 'dcf'))
+			# if plan.name == 'disc':
+			# 	plan.flaws.insert(GL, plan, Flaw(s_add.stepnumber, 'dcf'))
 
 		return plan
 
@@ -296,7 +305,7 @@ class PlanSpacePlanner:
 		elif flaw.name == 'dcf':
 			print(GL[flaw.flaw].name)
 			story = other.deepcopy()
-			results = story.Unify(GL[flaw.flaw].ground_subplan.deepcopy(), self.story_GL)
+			results = story.Unify(flaw.flaw, self.story_GL)
 			print(len(results))
 			GL = self.story_GL
 			other = plan.D
