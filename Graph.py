@@ -344,10 +344,10 @@ def retargetElmsInArgs(GSP, C1, C2):
 	for o in list(GSP.OrderingGraph.edges):
 		if o.source in bigger_map and o.sink in bigger_map:
 			orderings.remove(o)
-			orderings.append(Edge(bigger_map[o], bigger_map[o.sink], '<'))
+			orderings.append(Edge(bigger_map[o.source], bigger_map[o.sink], '<'))
 		elif o.source in bigger_map:
 			orderings.remove(o)
-			orderings.append(Edge(bigger_map[o], o.sink, '<'))
+			orderings.append(Edge(bigger_map[o.source], o.sink, '<'))
 		elif o.sink in bigger_map:
 			orderings.remove(o)
 			orderings.append(Edge(o.source, bigger_map[o.sink], '<'))

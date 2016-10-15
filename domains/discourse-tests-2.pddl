@@ -29,7 +29,7 @@
                (< ?source - step ?sink - step)
                (linked-by ?source - step ?sink - step ?dependency - literal))
 
-    (:action the-hero-knows
+    (:action D1
      :parameters (?indy - actor ?excavate - step)
      :precondition ()
      :effect (bel-occurs ?excavate)
@@ -37,7 +37,7 @@
                   (name ?indy indiana)
                   (nth-step-arg 0 ?excavate ?indy)))
 
-    (:action chase-scene
+    (:action D2
      :parameters (?indy - actor ?ark - item ?excavate - step ?state - literal)
      :precondition (bel-occurs ?excavate)
      :effect (and (bel-state ?state) (bel-effect ?state ?excavate))
@@ -51,7 +51,7 @@
                   (nth-lit-arg 1 ?state ?ark)
                   (effect ?excavate ?state)))
 
-    (:action dang-raiders
+    (:action D3
      :parameters (?excavate - step ?steal - step ?state - literal ?stolen - item)
      :precondition (and (bel-effect ?state ?excavate)
                 (bel-occurs ?excavate) (bel-effect ?state ?excavate) (not (= ?excavate ?steal)))

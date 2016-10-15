@@ -47,7 +47,7 @@ class OrderingGraph(Graph):
 
 			
 	######       rDetect       ####################
-	def rDetectCycle(self, element, visited = None):
+	def rDetectCycle(self, element, visited=None):
 		if visited == None:
 			visited = set()
 			
@@ -65,7 +65,7 @@ class OrderingGraph(Graph):
 		#Induction
 		for edge in incidentEdges:
 			#Descendants.add(edge.sink)
-			visited = self.rDetectCycle(edge.sink, visited = visited)
+			visited = self.rDetectCycle(edge.sink, visited=visited)
 		return visited
 		
 	def foundPath(self,start, finish):

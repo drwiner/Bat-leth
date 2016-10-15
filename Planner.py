@@ -434,7 +434,7 @@ class TestPlanner(unittest.TestCase):
 			GC.DGL = DGL
 
 		bi = PlanSpacePlanner(story[1], SGL, disc[1], DGL)
-		results = bi.POCL(1)
+		results = bi.POCL(5)
 		for R in results:
 			S = R.S
 			print(type(S))
@@ -446,9 +446,9 @@ class TestPlanner(unittest.TestCase):
 				print(Action.subgraph(S, step))
 
 			for elm in S.elements:
-				elm
+				print(elm)
 			for edge in S.edges:
-				edge
+				print(edge)
 
 
 			D = R.D
@@ -457,9 +457,9 @@ class TestPlanner(unittest.TestCase):
 				print(Action.subgraph(D, step))
 
 			for elm in D.elements:
-				elm
+				print(elm)
 			for edge in D.edges:
-				edge
+				print(edge)
 
 		print('\n\n')
 
