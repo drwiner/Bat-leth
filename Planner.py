@@ -110,10 +110,9 @@ class PlanSpacePlanner:
 				DPlan.flaws.insert(self.disc_GL, DPlan, flaw)
 
 			Story = SP.deepcopy()
-			Unify(Story, s_goal.ground_subplan, self.story_GL)
-			B = BiPlan(Story, DPlan)
-
-			BPlans.append(B)
+			New_Stories = Unify(Story, s_goal.ground_subplan, self.story_GL)
+			for NS in New_Stories:
+				BPlans.append( BiPlan(NS, DPlan))
 		return BPlans
 
 
@@ -147,24 +146,27 @@ class PlanSpacePlanner:
 			if plan.name == 'disc':
 				anteaction = GL[anteaction.stepnumber].deepcopy()
 				anteaction.replaceInternals()
-				eff = cndt.getElmByRID(eff_link.sink.replaced_ID)
+				eff = anteaction.getElmByRID(eff_link.sink.replaced_ID)
 
 				PArgs = list(Condition.subgraph(new_plan, precondition).Args)
-				EArgs =  list(Condition.subgraph(anteaction, eff).Args)
+				EArgs = list(Condition.subgraph(anteaction, eff).Args)
 				#Retarget args in discourse step.
-				retargetArgs(anteaction, PArgs, EArgs)
+				retargetArgs(anteaction, EArgs, PArgs)
 				#Retarget elements in args in ground subplan
-				retargetElmsInArgs(anteaction.ground_subplan, PArgs, EArgs)
+				retargetElmsInArgs(anteaction.ground_subplan, EArgs, PArgs)
 				#Then, add a flaw which says, add ground subplan, first looking if elm.ID already exists
 				new_plan.flaws.decomps.add(Flaw(anteaction.ground_subplan, 'dcf'))
-			else:
-				eff = eff_link.sink
+				# for edge in anteaction.edges:
+				# 	if edge.source == anteaction.root and edge.sink == eff:
+				# 		eff_link = edge
+				# 		break
+				eff_link = anteaction.RemoveSubgraph(eff)
 
 				#step 4 - set sink before replace internals
-				preserve_original_id = eff_link.sink.replaced_ID
-				eff_link.sink = new_plan.getElementById(precondition.ID)
-				eff_link.sink.replaced_ID = preserve_original_id
-				new_plan.edges.add(eff_link)
+			preserve_original_id = eff_link.sink.replaced_ID
+			eff_link.sink = new_plan.getElementById(precondition.ID)
+			eff_link.sink.replaced_ID = preserve_original_id
+			new_plan.edges.add(eff_link)
 
 
 			#step 5 - add new stuff to new plan
@@ -172,7 +174,7 @@ class PlanSpacePlanner:
 			new_plan.edges.update(anteaction.edges)
 
 			#step 6 - update orderings and causal links, add flaws
-			self.addStep(new_plan, anteaction.root, new_plan.getElementById(s_need.ID), eff, GL, new=True)
+			self.addStep(new_plan, anteaction.root, new_plan.getElementById(s_need.ID), eff_link.sink, GL, new=True)
 			new_plan.flaws.addCndtsAndRisks(GL, anteaction.root)
 
 			#step 7 - add new_plan to open list
@@ -310,7 +312,7 @@ class PlanSpacePlanner:
 		elif flaw.name == 'tclf':
 			results = self.resolveThreatenedCausalLinkFlaw(kplan, flaw)
 		elif flaw.name == 'dcf':
-			print(GL[flaw.flaw].name)
+			#print(GL[flaw.flaw].name)
 			story = other.deepcopy()
 			results = Unify(story, flaw.flaw, self.story_GL)
 			print(len(results))
@@ -379,11 +381,12 @@ class PlanSpacePlanner:
 
 
 def topoSort(graph):
-	OG  = copy.deepcopy(graph.OrderingGraph)
+	OG = copy.deepcopy(graph.OrderingGraph)
 	L =[]
 	S = {graph.initial_dummy_step}
 	while len(S) > 0:
 		n = S.pop()
+		print(n)
 		L.append(n)
 		for m_edge in OG.getIncidentEdges(n):
 			OG.edges.remove(m_edge)
@@ -433,12 +436,16 @@ class TestPlanner(unittest.TestCase):
 		results = bi.POCL(1)
 		for R in results:
 			S = R.S
-			D = R.D
+			print(type(S))
 			print('\n')
 			print('Story')
+
+
 			for step in topoSort(S):
 				print(Action.subgraph(S, step))
-			print('Discourse')
+
+			D = R.D
+			print('\nDiscourse')
 			for step in topoSort(D):
 				print(Action.subgraph(D, step))
 

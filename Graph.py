@@ -1,4 +1,4 @@
-from Element import Element
+from Element import Element, Literal
 import copy
 
 from clockdeco import clock
@@ -121,18 +121,25 @@ class Graph(Element):
 		return self
 
 	def assign(self, old_elm_in_edge, new_elm, remove_old=True):
+		if old_elm_in_edge == new_elm:
+			return
+		new_elements = list(self.elements)
+		new_edges = list(self.edges)
 		if remove_old:
-			self.elements.remove(old_elm_in_edge)
+			#if old_elm_in_edge in self.elements:
+			new_elements.remove(old_elm_in_edge)
 		if new_elm not in self.elements:
-			self.elements.add(new_elm)
-		edges = list(self.edges)
-		for edge in edges:
+			new_elements.append(new_elm)
+		for edge in list(self.edges):
 			if edge.source == old_elm_in_edge:
-				self.edges.remove(edge)
-				self.edges.add(Edge(new_elm, edge.sink, edge.label))
+				#if edge in self.edges:
+				new_edges.remove(edge)
+				new_edges.append(Edge(new_elm, edge.sink, edge.label))
 			if edge.sink == old_elm_in_edge:
-				self.edges.remove(edge)
-				self.edges.add(Edge(edge.source, new_elm, edge.label))
+				new_edges.remove(edge)
+				new_edges.append(Edge(edge.source, new_elm, edge.label))
+		self.elements = set(new_elements)
+		self.edges = set(new_edges)
 		for r in self.subgraphs:
 			if r.name == 'Restriction':
 				r.assign(old_elm_in_edge, new_elm)
@@ -291,6 +298,10 @@ def isIdenticalElmsInArgs(C1, C2):
 			try:
 				v.getElementById(elm.ID)
 			except:
+				if isinstance(elm, Literal):
+					for v_elm in v.elements:
+						if v_elm.name == elm.name and v_elm.truth == elm.truth:
+							continue
 				return False
 			#if elm.ID != v.getElmByRID(elm.replaced_ID).ID:
 			#	return False
@@ -302,25 +313,33 @@ def retargetElmsInArgs(GSP, C1, C2):
 	arg_map = dict(zip(C1, C2))
 	#For all args in C1/C2 which are element graphs, create a map by finding equivalent pieces via replaced_IDs. which are assumed to be the same for both. This makes sense since they are "literally" the same ground elements, but with different IDs
 	bigger_map = {}
-	for u,v in arg_map:
+	for u, v in arg_map.items():
 		if isinstance(u, Argument):
 			bigger_map[u] = v
 			continue
 		for elm in u.elements:
 			bigger_map[elm] = v.getElmByRID(elm.replaced_ID)
-
+			if bigger_map[elm] is None and isinstance(elm, Literal):
+				for v_elm in v.elements:
+					if v_elm.name == elm.name and v_elm.truth == elm.truth:
+						bigger_map[elm] = v_elm
+						break
 	#for each elm in GSP, or story, replace
 	retarget(GSP, bigger_map)
 	return C2
 
 def retargetArgs(G, C1, C2):
+	#G contains C1 and means to replace it with C2
 	retarget(G, dict(zip(C1,C2)))
 	return C2
 
-def retarget(G, map):
+def retarget(G, _map):
 	for elm in list(G.elements):
-		if elm in map:
-			G.assign(elm, map[elm])
+		if elm in _map:
+			try:
+				G.assign(elm, _map[elm])
+			except:
+				print('not acceptable')
 
 def findConsistentEdgeMap(Rem, Avail, map_ = None, Super_Maps = None):
 	if map_ is None:

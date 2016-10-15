@@ -325,7 +325,7 @@ def AddNewFlaws(GL, step, new_plan):
 
 	new_plan.flaws.addCndtsAndRisks(GL, step)
 
-def AddLink(link, UW, new_plan, remove_flaw=True):
+def AddLink(link, new_plan, UW, remove_flaw=True):
 
 	Source = Action.subgraph(new_plan, UW[link.source.position])
 	new_d = Source.getElmByRID(link.label.replaced_ID)

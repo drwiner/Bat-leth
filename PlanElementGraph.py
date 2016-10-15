@@ -47,6 +47,7 @@ class Action(ElementGraph):
 	# 	return self.root.executed
 
 	def RemoveSubgraph(self, elm):
+		edges = list(self.edges)
 		elm = self.getElementById(elm.ID)
 
 		if isinstance(elm, Literal):
@@ -55,10 +56,11 @@ class Action(ElementGraph):
 		link = None
 		for edge in list(self.edges):
 			if edge.source == elm:
-				self.edges.remove(edge)
+				edges.remove(edge)
 			if link is None:
 				if edge.sink == elm:
 					link = edge
+		self.edges = set(edges)
 		return link
 
 	def getPreconditionsOrEffects(self, label):
@@ -251,16 +253,18 @@ class PlanElementGraph(ElementGraph):
 		return new_self
 
 	def RemoveSubgraph(self, literal):
+		edges = list(self.edges)
 		elm = self.getElementById(literal.ID)
 		link = None
 		self.elements.remove(elm)
 
 		for edge in list(self.edges):
 			if edge.source == elm:
-				self.edges.remove(edge)
+				edges.remove(edge)
 			if link is None:
 				if edge.sink == elm:
 					link = edge
+		self.edges = set(edges)
 		return link
 
 	def AddSubgraph(self, subgraph):
