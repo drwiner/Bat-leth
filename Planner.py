@@ -48,9 +48,9 @@ class PlanSpacePlanner:
 		if disc_objects is not None:
 			self.disc_GL = disc_GL
 			self.disc_objects = disc_objects
-			Discourse_Plans = self.multiGoalSetup(self.disc_GL)
-			for DP in Discourse_Plans:
-				self.Open.insert(BiPlan(SP.deepcopy(), DP))
+			BiPlans = self.multiGoalSetup(SP)
+			for BP in BiPlans:
+				self.Open.insert(BP)
 		else:
 			self.Open.insert(SP)
 
@@ -89,12 +89,12 @@ class PlanSpacePlanner:
 			s_init_plan.flaws.insert(GL, s_init_plan, flaw)
 		return s_init_plan
 
-	def multiGoalSetup(self, GL):
+	def multiGoalSetup(self, SP):
 		#s_init is in the back for a multi-goal setup
-		init = copy.deepcopy(GL[-1])
+		init = copy.deepcopy(self.disc_GL[-1])
 		init.replaceInternals()
-		DPlans = []
-		for GA in GL.Goal_Actions:
+		BPlans = []
+		for GA in self.disc_GL.Goal_Actions:
 			s_goal = copy.deepcopy(GA)
 			s_init = copy.deepcopy(init)
 			DPlan = PlanElementGraph(name='disc',
@@ -107,10 +107,14 @@ class PlanSpacePlanner:
 
 			init_flaws = (Flaw((s_goal.root, prec), 'opf') for prec in s_goal.preconditions)
 			for flaw in init_flaws:
-				DPlan.flaws.insert(GL, DPlan, flaw)
-			DPlan.flaws.insert(GL, DPlan, Flaw(s_goal.stepnumber, 'dcf'))
-			DPlans.append(DPlan)
-		return DPlans
+				DPlan.flaws.insert(self.disc_GL, DPlan, flaw)
+
+			Story = SP.deepcopy()
+			Unify(Story, s_goal.ground_subplan, self.story_GL)
+			B = BiPlan(Story, DPlan)
+
+			BPlans.append(B)
+		return BPlans
 
 
 	#@clock
