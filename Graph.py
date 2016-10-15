@@ -288,8 +288,12 @@ def isIdenticalElmsInArgs(C1, C2):
 				return False
 			continue
 		for elm in u.elements:
-			if elm.ID != v.getElmByRID(elm.replaced_ID).ID:
+			try:
+				v.getElementById(elm.ID)
+			except:
 				return False
+			#if elm.ID != v.getElmByRID(elm.replaced_ID).ID:
+			#	return False
 	return True
 
 def retargetElmsInArgs(GSP, C1, C2):
