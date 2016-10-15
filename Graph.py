@@ -47,8 +47,6 @@ class Edge:
 		self.sink.merge(other.sink)
 		
 		return self
-
-
 	
 	def swapSink(self,sink):
 		self.sink = sink
@@ -121,7 +119,7 @@ class Graph(Element):
 		return self
 
 	def assign(self, old_elm_in_edge, new_elm, remove_old=True):
-		if old_elm_in_edge == new_elm:
+		if old_elm_in_edge.ID == new_elm.ID:
 			return
 		new_elements = list(self.elements)
 		new_edges = list(self.edges)
@@ -307,7 +305,7 @@ def isIdenticalElmsInArgs(C1, C2):
 			#	return False
 	return True
 
-@clock
+#@clock
 def retargetElmsInArgs(GSP, C1, C2):
 	# C2 is removable, in GSP, while C1 is replacer not in GSP
 	arg_map = dict(zip(C1, C2))
@@ -326,6 +324,35 @@ def retargetElmsInArgs(GSP, C1, C2):
 						break
 	#for each elm in GSP, or story, replace
 	retarget(GSP, bigger_map)
+
+	#Links
+	links = list(GSP.CausalLinkGraph.edges)
+	for link in list(GSP.CausalLinkGraph.edges):
+		if link.source in bigger_map and link.sink in bigger_map:
+			links.remove(link)
+			links.append(Edge(bigger_map[link.source], bigger_map[link.sink], bigger_map[link.label]))
+		elif link.source in bigger_map:
+			links.remove(link)
+			links.append(Edge(bigger_map[link.source], link.sink, bigger_map[link.label]))
+		elif link.sink in bigger_map:
+			links.remove(link)
+			links.append(Edge(link.source, bigger_map[link.sink], bigger_map[link.label]))
+	GSP.CausalLinkGraph.edges = set(links)
+
+	#Orderings
+	orderings = list(GSP.OrderingGraph.edges)
+	for o in list(GSP.OrderingGraph.edges):
+		if o.source in bigger_map and o.sink in bigger_map:
+			orderings.remove(o)
+			orderings.append(Edge(bigger_map[o], bigger_map[o.sink], '<'))
+		elif o.source in bigger_map:
+			orderings.remove(o)
+			orderings.append(Edge(bigger_map[o], o.sink, '<'))
+		elif o.sink in bigger_map:
+			orderings.remove(o)
+			orderings.append(Edge(o.source, bigger_map[o.sink], '<'))
+	GSP.OrderingGraph.edges = set(orderings)
+
 	return C2
 
 def retargetArgs(G, C1, C2):
@@ -336,10 +363,7 @@ def retargetArgs(G, C1, C2):
 def retarget(G, _map):
 	for elm in list(G.elements):
 		if elm in _map:
-			try:
-				G.assign(elm, _map[elm])
-			except:
-				print('not acceptable')
+			G.assign(elm, _map[elm])
 
 def findConsistentEdgeMap(Rem, Avail, map_ = None, Super_Maps = None):
 	if map_ is None:

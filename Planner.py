@@ -367,6 +367,7 @@ class PlanSpacePlanner:
 			#Select Flaw
 			k, flaw = plan.next_flaw()
 			#k = 0:story, 1:disc
+			#if k == 1:
 			print('{} selected : {}\n'.format(flaw.name, flaw))
 
 			#Add children to Open List
@@ -386,15 +387,15 @@ def topoSort(graph):
 	S = {graph.initial_dummy_step}
 	while len(S) > 0:
 		n = S.pop()
-		print(n)
+		#print(n)
 		L.append(n)
 		for m_edge in OG.getIncidentEdges(n):
 			OG.edges.remove(m_edge)
 			if len({edge for edge in OG.getParents(m_edge.sink)}) == 0:
 				S.add(m_edge.sink)
-	if len(OG.edges) > 0:
-		print('error')
-		return
+	# if len(OG.edges) > 0:
+	# 	print('error')
+	# 	return
 	return L
 
 
@@ -444,10 +445,21 @@ class TestPlanner(unittest.TestCase):
 			for step in topoSort(S):
 				print(Action.subgraph(S, step))
 
+			for elm in S.elements:
+				elm
+			for edge in S.edges:
+				edge
+
+
 			D = R.D
 			print('\nDiscourse')
 			for step in topoSort(D):
 				print(Action.subgraph(D, step))
+
+			for elm in D.elements:
+				elm
+			for edge in D.edges:
+				edge
 
 		print('\n\n')
 
