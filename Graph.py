@@ -381,18 +381,18 @@ def findConsistentEdgeMap(Rem, Avail, map_ = None, Super_Maps = None):
 	cndt_edges = {edge for edge in Avail if edge.isConsistent(edge_match)}
 
 	if edge_match.source in map_:
-		cndt_edges -= {edge for edge in cndt_edges if not edge.source == map_[edge_match.source]}
+		cndt_edges -= {edge for edge in cndt_edges if edge.source != map_[edge_match.source]}
 	if edge_match.sink in map_:
-		cndt_edges -= {edge for edge in cndt_edges if not edge.sink == map_[edge_match.sink]}
+		cndt_edges -= {edge for edge in cndt_edges if edge.sink != map_[edge_match.sink]}
 
 	if len(cndt_edges) == 0:
 		return Super_Maps
 
 	for cndt in cndt_edges:
 		Map_ = copy.deepcopy(map_)
-		if not cndt.source in map_:
+		if cndt.source not in map_:
 			Map_[edge_match.source] = cndt.source
-		if not cndt.sink in map_:
+		if cndt.sink not in map_:
 			Map_[edge_match.sink] = cndt.sink
 		findConsistentEdgeMap(copy.deepcopy(Rem), Avail, Map_, Super_Maps)
 
